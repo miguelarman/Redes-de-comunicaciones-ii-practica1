@@ -1,0 +1,1 @@
+int demonizar(char *servicio);
