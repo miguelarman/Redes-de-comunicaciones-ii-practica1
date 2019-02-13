@@ -5,7 +5,7 @@
 #include <syslog.h>
 #include <sys/stat.h>
 
-#include "daemon.h"
+#include "../includes/daemon.h"
 
 #define WORKING_DIRECTORY "/"
 #define MASK 0
@@ -16,12 +16,7 @@ int demonizar(char *servicio) {
 
   pid_t child_pid;
   int max_fd, i;
-  /*
-  Es importante notar que un proceso daemon no está asociado a una terminal, y por tanto no debe utilizar funciones como printf() ni leer o escribir de entrada o salida estándar. Para notificar mensajes, este tipo de procesos utiliza el log del sistema, que típicamente se puede encontrar en /var/log/syslog .
-  Funciones a utilizar:
-  chdir, close, fork, getdtablesize, open, openlog, setsid, syslog, umask
-  Consultar en el manual de la función open el significado de los flags O_RDONLY y O_RDWR
-  */
+  
 
   // Comprobamos el parametro
   if (servicio == NULL) {

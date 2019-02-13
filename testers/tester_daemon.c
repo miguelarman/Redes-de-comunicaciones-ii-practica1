@@ -1,4 +1,4 @@
-#include "../srclib/daemon.h"
+#include "../includes/daemon.h"
 #include <stdio.h>
 
 /* gcc -c daemon.c
@@ -20,7 +20,7 @@ int main () {
 
   r = demonizar("test");
 
-  printf("Returned: %d\n", r);
+  printf("Returned: %d", r);
   if (r == 0) {
     printf("\tCorrect execution (check syslog)\n");
   } else {
