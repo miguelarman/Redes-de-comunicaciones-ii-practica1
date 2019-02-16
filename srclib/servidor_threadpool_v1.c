@@ -9,7 +9,7 @@ struct _client {
 int client_create(client **c_out, int connfd, int poisoned) {
   client *c;
 
-  if (c == NULL) {
+  if (c_out == NULL) {
     return ERROR;
   }
 
