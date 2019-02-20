@@ -1,34 +1,39 @@
 
-int
-main(int argc, char **argv)
+/*
+  Esta es otra version del servidor, en la que no se usa la cola bloqueante
+  implementada y son los hilos los que se encargan de hacer el accept
+*/
+
+int main(int argc, char **argv)
 {
-        int             listenfd, i;
-        socklen_t       addrlen;
+  int listenfd, i;
+  socklen_t addrlen;
+  blockingQueue *queue;
+  pthread_t threads[THREAD_COUNT];
+  client **c;
 
-        /* Contiene las llamadas a socket(), bind() y listen() */
-        listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
+  /* Contiene las llamadas a socket(), bind() y listen() */
+  listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
+  /* Crea los hilos y los despega */
+  for (i = 0; i < thread_count; i++) {
+    // hay que especificar los args como aqui el hilo hace el accept necesita
+    // mas info
+    pthread_create(tp->threads[i], NULL, thread_routine, args);
+    // falta control
+    pthread_detach(tp->threads[i]);
+    // falta control
+  }
 
-        my_lock_init(NULL);
-        for (i = 0; i < nchildren; i++)
-                if ( (childpid = Fork()) == 0) {
-                        child_main(i, listenfd, addrlen);       /* Esta funcion nunca retorna */
-                }
-
-        for ( ; ; )
-                pause();        /* Todo el trabajo lo hacen los hijos */
+  while (1) {
+    /* El padre se desentiende */
+  }
 }
 
-void
-child_main(int i, int listenfd, int addrlen)
-{
-
-        for ( ; ; ) {
-                clilen = addrlen;
-                my_lock_wait();
-                connfd = Accept(listenfd, cliaddr, &clilen);
-                my_lock_release();
-
-                process_request(connfd);
-                Close(connfd);
-        }
+void *thread_routine(void *args) {
+  /* Los hilos hacen todo el trabajo */
+  while (1) {
+    Accept(listenfd, cliadrr, &clilen);
+    process_request(connfd);
+    Close(connfd);
+  }
 }
