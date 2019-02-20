@@ -5,7 +5,10 @@ struct _client {
     int connfd;
     int poisoned;
 };
-
+/*
+  Esta es la estructura que se pasa por la cola bloqueante para
+  que los hilos la procesen
+*/
 int client_create(client **c_out, int connfd, int poisoned) {
   client *c;
 
@@ -22,10 +25,12 @@ int client_create(client **c_out, int connfd, int poisoned) {
 }
 
 int client_destroy(client *c) {
-
+  if (client == NULL) {
+    return ERROR;
+  }
+  free(c);
+  return SUCCESS;
 }
-
-int die;
 
 int main(int argc, char **argv)
 {
@@ -48,8 +53,6 @@ int main(int argc, char **argv)
   }
 
   while (1) {
-    if (die == 1)
-      finaliza
     connfd = Accept(listenfd, cliaddr, &clilen);
     client_create(c, connfd, 0);
     blockingQueue_put(queue, *c);
