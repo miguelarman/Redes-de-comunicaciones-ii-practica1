@@ -1,4 +1,4 @@
-
+#include "connections.h"
 /*
   Esta es otra version del servidor, en la que no se usa la cola bloqueante
   implementada y son los hilos los que se encargan de hacer el accept
@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   client **c;
 
   /* Contiene las llamadas a socket(), bind() y listen() */
-  listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
+  socketfd = Tcp_listen(ip, port);
   /* Crea los hilos y los despega */
   for (i = 0; i < thread_count; i++) {
     // hay que especificar los args como aqui el hilo hace el accept necesita
@@ -27,13 +27,18 @@ int main(int argc, char **argv)
   while (1) {
     /* El padre se desentiende */
   }
+
+  close_connection(sockfd);
 }
 
 void *thread_routine(void *args) {
+
+  int connfd;
+  
   /* Los hilos hacen todo el trabajo */
   while (1) {
-    Accept(listenfd, cliadrr, &clilen);
-    process_request(connfd);
-    Close(connfd);
+    connfd = accept_connection(listenfd, cliadrr, &clilen);
+    process_connection(connfd);
+    close_connection(connfd);
   }
 }

@@ -1,7 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "../includes/procesa_peticion.h"
 
-int procesa_peticion (cliente *cl) {
+int procesa_peticion (int connfd) {
 
   // char *verbo_peticion = NULL;
   // char *ruta = NULL;
@@ -46,5 +45,5 @@ int procesa_peticion (cliente *cl) {
 
 
 
-  return -1;
+  return ERROR;
 }
