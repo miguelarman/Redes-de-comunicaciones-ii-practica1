@@ -39,6 +39,7 @@ void *thread_routine(void *arg) {
     blockingQueue_get(queue, (void *)&c);
     if (c->poisoned == 1) {
       printf("Soy %ld y me han envenenado ahhh\n", pthread_self());
+      free(c);
       pthread_exit(NULL);
     }
     //process_request(connfd);
@@ -64,6 +65,8 @@ int main(int argc, char **argv)
   pthread_t threads[THREAD_COUNT];
   client **c;
 
+  c = (client **)malloc(sizeof(client *));
+
   /* Contiene las llamadas a socket(), bind() y listen() */
   //listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
   /* Crea la cola bloqueante */
@@ -72,9 +75,9 @@ int main(int argc, char **argv)
   for (i = 0; i < THREAD_COUNT; i++) {
     pthread_create(&threads[i], NULL, thread_routine, queue);
     // falta control
-    pthread_detach(threads[i]);
+    //pthread_detach(threads[i]);
     // falta control
-    printf("Soy el padre y he creado y despegado a mi hijo de nombre %ld\n", threads[i]);
+    printf("Soy el padre y he creado y no espegado a mi hijo de nombre %ld\n", threads[i]);
   }
 
   printf("Soy el padre y voy a crear %d tareas para mis hijos y luego los voy a matar\n", THREAD_COUNT*2);
@@ -86,4 +89,12 @@ int main(int argc, char **argv)
     client_create(c, -1, 1);
     blockingQueue_put(queue, *c);
   }
+
+  for (i = 0; i < THREAD_COUNT; i++) {
+    pthread_join(threads[i], NULL);
+  }
+
+  blockingQueue_destroy(queue);
+  free(c);
+  return 0;
 }
