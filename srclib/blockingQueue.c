@@ -2,7 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#include "blockingQueue.h"
+#include "../includes/blockingQueue.h"
 
 struct _blockingQueue {
     int size;
@@ -87,4 +87,3 @@ int blockingQueue_put(blockingQueue *q, void *entry) {
     sem_post(&q->filled);
     return SUCCESS;
 }
-

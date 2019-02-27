@@ -1,5 +1,10 @@
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <sys/socket.h>
 
-#include ".../includes/blockingQueue.h"
+#include "../includes/blockingQueue.h"
+#include "../includes/servidor_threadpool.h"
 
 struct _client {
     int connfd;
@@ -24,8 +29,27 @@ int client_create(client **c_out, int connfd, int poisoned) {
   return SUCCESS;
 }
 
+void *thread_routine(void *arg) {
+  blockingQueue *queue;
+  client *c;
+
+  /* Coge la cola del argumento */
+  queue = (blockingQueue *)arg;
+  while (1) {
+    blockingQueue_get(queue, (void *)&c);
+    if (c->poisoned == 1) {
+      printf("Soy %ld y me han envenenado ahhh\n", pthread_self());
+      pthread_exit(NULL);
+    }
+    //process_request(connfd);
+    printf("Soy %ld y estoy procesando el cliente %d jejej\n", pthread_self(), c->connfd);
+    //Close(connfd);
+    free(c);
+  }
+}
+
 int client_destroy(client *c) {
-  if (client == NULL) {
+  if (c == NULL) {
     return ERROR;
   }
   free(c);
@@ -43,14 +67,14 @@ int main(int argc, char **argv)
   /* Contiene las llamadas a socket(), bind() y listen() */
   //listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
   /* Crea la cola bloqueante */
-  blockingQueue_create(queue, QUEUE_SIZE, THREAD_COUNT);
+  blockingQueue_create(&queue, QUEUE_SIZE);
   /* Crea los hilos y los despega */
-  for (i = 0; i < thread_count; i++) {
-    pthread_create(threads[i], NULL, thread_routine, queue);
+  for (i = 0; i < THREAD_COUNT; i++) {
+    pthread_create(&threads[i], NULL, thread_routine, queue);
     // falta control
     pthread_detach(threads[i]);
     // falta control
-    printf("Soy el padre y he creado y despegado a mi hijo de nombre %d\n", threads[i]);
+    printf("Soy el padre y he creado y despegado a mi hijo de nombre %ld\n", threads[i]);
   }
 
   printf("Soy el padre y voy a crear %d tareas para mis hijos y luego los voy a matar\n", THREAD_COUNT*2);
@@ -61,24 +85,5 @@ int main(int argc, char **argv)
   for (i = 0; i < THREAD_COUNT; i++) {
     client_create(c, -1, 1);
     blockingQueue_put(queue, *c);
-  }
-}
-
-void *thread_routine(void *arg) {
-  blockingQueue *queue;
-  client *c;
-
-  /* Coge la cola del argumento */
-  queue = (blockingQueue *)arg;
-  while (1) {
-    blockingQueue_get(queue, &c);
-    if (c->is_poisoned == 1) {
-      printf("Soy %d y me han envenenado ahhh\n", pthread_self());
-      pthread_exit(NULL);
-    }
-    //process_request(connfd);
-    printf("Soy %d y estoy procesando el cliente %d jejej\n", pthread_self(), client->connfd);
-    Close(connfd);
-    free(c);
   }
 }
