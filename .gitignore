@@ -1,0 +1,3 @@
+www/media/*
+*.o
+test_server

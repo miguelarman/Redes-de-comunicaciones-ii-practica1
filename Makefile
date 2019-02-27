@@ -78,13 +78,13 @@
 # Description: Makefile of the whole project. With options to compile and execute the programs
 ########################################################
 CC = gcc
-CFLAGS = -g -Wall #-ansi -pedantic
+CFLAGS = -g -Wall -ansi -pedantic
 FILES = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
-OBJECTSTEST_SERVER = srclib/connection.o testers/test_server.o
+OBJECTSTEST_SERVER = srclib/connection.o srclib/procesa_peticion.o srclib/picohttpparser.o testers/test_server.o
 ########################################################
-OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o testers/test_server.o
+OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o srclib/picohttpparser.o testers/test_server.o srclib/procesa_peticion.o
 ########################################################
 
 all: $(FILES) clear
@@ -108,6 +108,12 @@ daemon.o: srclib/daemon.c includes/daemon.h
 
 connection.o: srclib/connection.c includes/connection.h
 	$(CC) $(CFLAGS) -c srclib/connection.c
+
+procesa_peticion.o: srclib/procesa_peticion.c includes/procesa_peticion.h includes/picohttpparser.h
+	$(CC) $(CFLAGS) -c srclib/procesa_peticion.c
+
+picohttpparser.o: srclib/picohttpparser.c includes/picohttpparser.h
+	$(CC) $(CFLAGS) -c srclib/picohttpparser.c
 
 ########################################################
 
