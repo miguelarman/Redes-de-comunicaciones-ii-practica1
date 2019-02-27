@@ -1,5 +1,5 @@
 
-#include "blockingQueue.h"
+#include ".../includes/blockingQueue.h"
 
 struct _client {
     int connfd;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
   client **c;
 
   /* Contiene las llamadas a socket(), bind() y listen() */
-  listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
+  //listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
   /* Crea la cola bloqueante */
   blockingQueue_create(queue, QUEUE_SIZE, THREAD_COUNT);
   /* Crea los hilos y los despega */
@@ -50,11 +50,16 @@ int main(int argc, char **argv)
     // falta control
     pthread_detach(threads[i]);
     // falta control
+    printf("Soy el padre y he creado y despegado a mi hijo de nombre %d\n", threads[i]);
   }
 
-  while (1) {
-    connfd = Accept(listenfd, cliaddr, &clilen);
-    client_create(c, connfd, 0);
+  printf("Soy el padre y voy a crear %d tareas para mis hijos y luego los voy a matar\n", THREAD_COUNT*2);
+  for (i = 0; i < THREAD_COUNT*2; i++) {
+    client_create(c, i, 0);
+    blockingQueue_put(queue, *c);
+  }
+  for (i = 0; i < THREAD_COUNT; i++) {
+    client_create(c, -1, 1);
     blockingQueue_put(queue, *c);
   }
 }
@@ -68,9 +73,11 @@ void *thread_routine(void *arg) {
   while (1) {
     blockingQueue_get(queue, &c);
     if (c->is_poisoned == 1) {
+      printf("Soy %d y me han envenenado ahhh\n", pthread_self());
       pthread_exit(NULL);
     }
-    process_request(connfd);
+    //process_request(connfd);
+    printf("Soy %d y estoy procesando el cliente %d jejej\n", pthread_self(), client->connfd);
     Close(connfd);
     free(c);
   }
