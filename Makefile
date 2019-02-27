@@ -78,12 +78,13 @@
 # Description: Makefile of the whole project. With options to compile and execute the programs
 ########################################################
 CC = gcc
-CFLAGS = -g -Wall
-FILES = tester_daemon
+CFLAGS = -g -Wall #-ansi -pedantic
+FILES = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
+OBJECTSTEST_SERVER = srclib/connection.o testers/test_server.o
 ########################################################
-OBJECTS = srclib/daemon.o testers/tester_daemon.o
+OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o testers/test_server.o
 ########################################################
 
 all: $(FILES) clear
@@ -94,11 +95,19 @@ tester_daemon: $(OBJECTSTESTER_DAEMON)
 tester_daemon.o: includes/daemon.h testers/tester_daemon.c
 	$(CC) $(CFLAGS) -c testers/tester_daemon.c
 
+test_server: $(OBJECTSTEST_SERVER)
+	$(CC) $(CFLAGS) -o test_server $(OBJECTSTEST_SERVER)
+
+test_server.o: includes/connection.h testers/test_server.c
+	$(CC) $(CFLAGS) -c testers/test_server.c
 
 
 
 daemon.o: srclib/daemon.c includes/daemon.h
 	$(CC) $(CFLAGS) -c srclib/daemon.c
+
+connection.o: srclib/connection.c includes/connection.h
+	$(CC) $(CFLAGS) -c srclib/connection.c
 
 ########################################################
 

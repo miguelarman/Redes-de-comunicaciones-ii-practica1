@@ -4,10 +4,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
-int tcp_listen(char ip, int port);
+int tcp_listen(char *ip, int port, struct sockaddr* addr);
 
-int accept_connection(int sockfd, struct sockaddr* addr, socketlen_t *addrlen);
+int accept_connection(int sockfd, struct sockaddr* addr, socklen_t *addrlen);
 
 int close_connection(int fd);
 
