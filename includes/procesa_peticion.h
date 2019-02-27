@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 
-int procesa_peticion (cliente *cl);
+
+int procesa_peticion (int connfd);
 
 
 #endif
