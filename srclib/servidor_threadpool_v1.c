@@ -46,9 +46,9 @@ int main(int argc, char **argv)
   blockingQueue_create(queue, QUEUE_SIZE, THREAD_COUNT);
   /* Crea los hilos y los despega */
   for (i = 0; i < thread_count; i++) {
-    pthread_create(tp->threads[i], NULL, thread_routine, queue);
+    pthread_create(threads[i], NULL, thread_routine, queue);
     // falta control
-    pthread_detach(tp->threads[i]);
+    pthread_detach(threads[i]);
     // falta control
   }
 

@@ -2,7 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#include "blockingQueue.h"
+#include "../includes/blockingQueue.h"
 
 struct _blockingQueue {
     int size;
