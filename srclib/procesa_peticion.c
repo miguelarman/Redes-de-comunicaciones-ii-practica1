@@ -3,14 +3,51 @@
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <string.h>
+#include <sys/sendfile.h>
+#include <fcntl.h>
+#include <time.h>
+
 
 #define ERROR -1
 #define MAXBUF 1024
+#define MAX_FECHA 1024
 
 #define PARSEERROR -2
 #define REQUESTISTOOLONGERROR -3
 #define IOERROR -4
+/* #define INDEX_BASICO "www/index_prueba.html" */
+#define INDEX_BASICO "/www/index.html"
 
+#define HTTP_RESPONSE_VERSION "HTTP/1.1"
+
+#define RESPONSE_OK_CODE 200
+#define RESPONSE_NOT_FOUND_CODE 404
+
+#define RESPONSE_OK_FRASE "OK"
+#define RESPONSE_NOT_FOUND_FRASE "Not Found"
+
+#define HTML_EXTENSION 3
+#define JPG_EXTENSION  4
+#define JPEG_EXTENSION 5
+#define GIF_EXTENSION  6
+#define TXT_EXTENSION  7
+#define OTHER_EXTENSION  8
+
+#define HTML_TYPE "text/html"
+#define JPG_TYPE "image/jpg"
+#define JPEG_TYPE "image/jpeg"
+#define GIF_TYPE "image/gif"
+#define TXT_TYPE "text/plain"
+#define CHARSET "charset=UTF-8"
+
+#define MAX_RESPUESTA 10000 /* TODO Valores a revisar */
+#define MAX_LINEA 1000
+
+int _extension_archivo(char *ruta);
+char * _tipo_archivo(char *ruta);
 
 int procesa_peticion (int connfd) {
 
@@ -68,10 +105,19 @@ int procesa_peticion (int connfd) {
     printf("%.*s: %.*s\n", (int)headers[i].name_len, headers[i].name, (int)headers[i].value_len, headers[i].value);
   }
 
-  char *verbo_peticion = NULL;
-  char *ruta = NULL;
+  char *verbo_peticion     = NULL;
+  char *ruta_fichero       = NULL;
+  char *cabecera_respuesta = NULL;
+  char *linea_campo        = NULL; /* TODO no hacer tantos callocs */
+  char *tipo_fichero       = NULL;
+  FILE *fichero_a_mandar   = NULL;
+  int fichero_a_mandar_df = -1;
+  int   cabecera_length    = 0;
+  int   tamanio_fichero    = 0;
+  struct stat statbuf;
 
-  if ((verbo_peticion = (char *)malloc((int)method_len * sizeof(char))) == NULL) {
+
+  if ((verbo_peticion = (char *)malloc(((int)method_len + 1) * sizeof(char))) == NULL) {
     /* TODO */
   }
   if (sprintf(verbo_peticion, "%.*s", (int)method_len, method) < 0) {
@@ -83,83 +129,332 @@ int procesa_peticion (int connfd) {
   printf("---------------------------\nMetodo: %s\n", verbo_peticion);
 
   if (strcmp(verbo_peticion, "GET") == 0) { /* Petición GET */
-    if ((ruta = (char *)malloc((int)path_len * sizeof(char))) == NULL) {
+    /* Guarda la ruta del fichero */
+    if ((ruta_fichero = (char *)malloc(((int)path_len + 1) * sizeof(char))) == NULL) {
       /* TODO */
     }
-    if (sprintf(ruta, "%.*s", (int)path_len, path) < 0) {
+    if (sprintf(ruta_fichero, "%.*s", (int)path_len, path) < 0) {
       /* TODO */
     }
-    /* DEBUG */
-    printf("Ruta: %s\n", ruta);
 
-    if (strcmp(ruta, "/") == 0) {
+    if (strcmp(ruta_fichero, "/") == 0) {
       /* Responder html básico */
-      strcpy(ruta, "index_prueba.html");
+      strcpy(ruta_fichero, INDEX_BASICO);
     }
-    char *cabecera_respuesta = NULL;
+    if (ruta_fichero[0] == '/') {
+      ruta_fichero++;
+    }
 
-    cabecera_respuesta = (char *)calloc(MAX_RESPUESTA * sizeof(char));
+    /* DEBUG */printf("--------------\n");
+
+    cabecera_respuesta = (char *)calloc(1, MAX_RESPUESTA * sizeof(char));
     if (cabecera_respuesta == NULL) {
       /* TODO */
+      /* DEBUG */printf("Error con el calloc de cabecera_respuesta\n");
     }
+
+
     /* TODO */
-    /* Forma todos los campos de la cabecera*/
+    /* Abre el fichero pedido */
+    /* fichero_a_mandar = fopen(ruta_fichero, "r"); */
+    /* DEBUG */printf("Va a abrir el fichero\n");
+    fichero_a_mandar_df = open(ruta_fichero, O_RDONLY);
+    /* DEBUG */printf("Llama a open: %d\n", fichero_a_mandar_df);
 
-    /* TODO*/
-    /* Manda la cabecera */
-    /* Envía el fichero */
-  
+
+    /* Forma todos los campos de la cabecera */
+    /* TODO rehacer con sprintf? */
+
+    /* 1- Escribe la linea de respuesta */
+
+    /* 1.1 Escribe la version */
+    linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+    if (linea_campo == NULL) {
+      /* TODO */
+    }
+
+    cabecera_length += sprintf(linea_campo, "%s ", HTTP_RESPONSE_VERSION);
+    if (linea_campo == NULL) {
+      /* TODO */
+    }
+
+    strcat(cabecera_respuesta, linea_campo);
+    if (cabecera_respuesta == NULL) {
+      /* TODO */
+      /* DEBUG */ printf("Un strcat da NULL\n");
+    }
+
+
+    /* if (fichero_a_mandar == NULL) { /* El fichero pedido no existe */
+    if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
+      /* DEBUG */printf("Fichero pedido no existe: %s\n", ruta_fichero);
+
+
+      /* 1.2 Escribe el codigo de respuesta */
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "%d ", RESPONSE_NOT_FOUND_CODE);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+        /* DEBUG */ printf("Un strcat da NULL\n");
+      }
+
+      /* 1.3 Escribe la frase de respuesta */
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "%s\r\n", RESPONSE_NOT_FOUND_FRASE);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+        /* DEBUG */ printf("Un strcat da NULL\n");
+      }
+
+      strcat(cabecera_respuesta, "\r\n");
+      cabecera_length += 4;
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      }
+
+      tamanio_fichero = 0;
+
+      free(linea_campo);
+
+    } else { /* Se ha pedido un archivo que existe */
+      /* DEBUG */printf("Fichero pedido: %s\n", ruta_fichero);
+
+      /* 1.2 Escribe el codigo de respuesta */
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "%d ", RESPONSE_OK_CODE);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+        /* DEBUG */ printf("Un strcat da NULL\n");
+      }
+
+      /* 1.3 Escribe la frase de respuesta */
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "%s\r\n", RESPONSE_OK_FRASE);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+        /* DEBUG */ printf("Un strcat da NULL\n");
+      }
+
+      /* 2. Escribe los campos de cabecera */
+
+      /* 2.1 Escribe el tipo de fichero */
+      tipo_fichero = _tipo_archivo(ruta_fichero);
+      if (tipo_fichero == NULL) {
+        /* TODO */
+      }
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "Content-type:%s\r\n", tipo_fichero);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      }
+
+      /* 2.2 Escribe el tamaño de fichero */
+      if (stat(ruta_fichero, &statbuf) < 0) {
+        /* TODO */
+      }
+      tamanio_fichero = statbuf.st_size;
+
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      cabecera_length += sprintf(linea_campo, "Content-length:%d\r\n", tamanio_fichero);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      }
+
+      /* TODO 2.3. Escribe la fecha y hora actuales */
+      time_t now = time(0);
+      struct tm tm = *gmtime(&now);
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+
+      /* cabecera_length += sprintf(linea_campo, "Date:%s\r\n", actual); */
+      cabecera_length += strftime(linea_campo, MAX_FECHA, "Date: %a, %d %b %Y %H:%M:%S %Z\r\n", &tm);
+      /* DEBUG */printf("Linea con la fecha: %s\n", linea_campo);
+      if (linea_campo == NULL) {
+        /* TODO */
+      }
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      }
+
+      /* TODO 2.4. Escribe la ultima modificacion */
+      /*struct timespec last_modified = statbuf.st_mtime;
+      free(linea_campo);
+      linea_campo = (char *)calloc(1, MAX_LINEA * sizeof(char));
+      if (linea_campo == NULL) {
+        /* TODO */
+      /*}
+
+      cabecera_length += sprintf(linea_campo, "Last-modified:%s\r\n", last_modified);
+      if (linea_campo == NULL) {
+        /* TODO */
+      /*}
+      strcat(cabecera_respuesta, linea_campo);
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      /*}*/
+
+
+
+
+      strcat(cabecera_respuesta, "\r\n");
+      cabecera_length += 4;
+      if (cabecera_respuesta == NULL) {
+        /* TODO */
+      }
+
+      free(linea_campo);
+    }
+
+    /* DEBUG */
+    printf("Cabecera:\n%s\n", cabecera_respuesta);
+    /* TODO 3. Manda la cabecera */
+    if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
+      /* TODO */
+    }
+    /* DEBUG */printf("Cabecera mandada\n");
+
+    /* DEBUG */printf("Va a mandar fichero de %d bytes\n", tamanio_fichero);
+    /* TODO 4. Manda el archivo */
+    /*if (send(connfd, fichero_a_mandar, tamanio_fichero, 0) < 0) {
+      /* TODO */
+    /*}*/
+    int bytes_mandados = sendfile(connfd, fichero_a_mandar_df, NULL, tamanio_fichero);
+    if (bytes_mandados < 0) {
+      /* TODO */
+
+      /* DEBUG */
+      printf("Error con sendfile\n");
+    } else {
+      /* DEBUG */printf("Archivo mandado (%d bytes)\n", bytes_mandados);
+    }
+
+    /* DEBUG */printf("----------------------\n\n\n\n");
+
+
+    if (fichero_a_mandar_df > 0) {
+      close(fichero_a_mandar_df);
+    }
+
+    ruta_fichero--;
+    free(ruta_fichero);
+
   } else {
-    /* Verbo no soportado */
+    /* TODO Verbo no soportado */
   }
 
+  free(verbo_peticion);
 
-  /**************************
-
-  char *verbo_peticion = NULL;
-  char *ruta = NULL;
-
-  // Esperar a una petición
-
-  // Leer la petición
-  verbo_peticion = -------------;
-  if (verbo_peticion == NULL) {
-    // Error al leer la petición
-  }
-
-   if (strcpm(verbo_peticion, GET) == 0) {
-     // Recibe una petición GET
-
-     // Lee el archivo que se le pide
-     ruta = -------------;
-     if (ruta == NULL) {
-       // Error al leer la petición
-     }
-
-     if (strcmp(ruta, "/") == 0) {
-       // Devuelve el index.html base
-     } else if (strcmp(ruta, ruta_otro_fichero) == 0) {
-       // Devuelve el fichero específico
-       // Se usa un buffer de tamaño fijo (1 KB)
-       // y se envía "a trozos" el fichero
-     } else {
-       // Fichero no conocido
-       // Devuelve un mensaje de error 404
-     }
-   } else if (strcpm(verbo_peticion, POST) == 0) {
-     // Recibe un POST
-   } else if (strcpm(verbo_peticion, OPTIONS) == 0) {
-     // Recibe una petición OPTIONS
-   } else {
-     // Verbo de petición no soportada
-   }
-
-   */
-
-
-
-
+  free(cabecera_respuesta);
 
 
   return ERROR;
+}
+
+
+/**************************************************************/
+/**************************************************************/
+/**************************************************************/
+/**************************************************************/
+
+int _extension_archivo(char *ruta) {
+  const char *punto = strrchr(ruta, '.');
+
+  if (punto == NULL || punto == ruta) {
+    punto = NULL;
+  } else {
+    punto ++;
+  }
+
+  if (strcmp(punto, "html") == 0) {
+    return HTML_EXTENSION;
+  } else if (strcmp(punto, "jpg") == 0) {
+    return JPG_EXTENSION;
+  } else if (strcmp(punto, "jpeg") == 0) {
+    return JPEG_EXTENSION;
+  } else if (strcmp(punto, "gif") == 0) {
+    return GIF_EXTENSION;
+  } else if (strcmp(punto, "txt") == 0) {
+    return TXT_EXTENSION;
+  } else {
+    return OTHER_EXTENSION;
+  }
+
+
+}
+char * _tipo_archivo(char *ruta) {
+  if (_extension_archivo(ruta) == HTML_EXTENSION) {
+    return HTML_TYPE;
+  } else if (_extension_archivo(ruta) == JPEG_EXTENSION) {
+    return JPEG_TYPE;
+  } else if (_extension_archivo(ruta) == JPG_EXTENSION) {
+    return JPG_TYPE;
+  } else if (_extension_archivo(ruta) == GIF_EXTENSION) {
+    return GIF_TYPE;
+  } else if (_extension_archivo(ruta) == TXT_EXTENSION) {
+    return TXT_TYPE;
+  } else {
+
+  }
 }

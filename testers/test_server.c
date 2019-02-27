@@ -4,6 +4,7 @@
 
 #define SERVER_PORT 9999
 #define SERVER_IP "127.0.0.1"
+/* #define SERVER_IP "192.168.1.39" /* Direccion en la red local para probar desde otro dispositivo */
 
 int main() {
 
@@ -22,9 +23,8 @@ int main() {
 
     procesa_peticion(connfd);
 
-
+    close_connection(connfd);
   }
-  close_connection(connfd);
   close_connection(socketfd);
 
 
