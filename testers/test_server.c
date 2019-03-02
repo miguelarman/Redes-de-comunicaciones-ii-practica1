@@ -1,20 +1,33 @@
 #include "../includes/connection.h"
 #include "../includes/procesa_peticion.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+
 
 #define SERVER_PORT 9999
 #define SERVER_IP "127.0.0.1"
-/* #define SERVER_IP "192.168.1.39" /* Direccion en la red local para probar desde otro dispositivo */
+/*#define SERVER_IP "192.168.1.39" /* Direccion en la red local para probar desde otro dispositivo */
+
+void cierre_usuario(int senal);
+
+/* Variables globales */
+int socketfd;
+int connfd;
 
 int main() {
-
-  int socketfd;
-  int connfd;
 
   struct sockaddr_in client_addr;
   int addrlen = sizeof(client_addr);
 
+  signal(SIGINT, cierre_usuario);
+
   socketfd = tcp_listen(SERVER_IP, SERVER_PORT);
+  if (socketfd == ERROR_BIND) {
+    /* TODO */
+    printf("Error en tcp_listen\n");
+    exit(-1);
+  }
   printf("Escuchando en [%s:%d]...\n", SERVER_IP, SERVER_PORT);
 
   while (1) {
@@ -26,7 +39,12 @@ int main() {
     close_connection(connfd);
   }
   close_connection(socketfd);
+}
 
+void cierre_usuario(int senal) {
+  /* Cierra la conexión y el socket */
+  close_connection(connfd);
+  close_connection(socketfd);
 
-
+  exit(EXIT_SUCCESS);
 }

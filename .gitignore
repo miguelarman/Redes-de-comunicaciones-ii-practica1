@@ -2,3 +2,4 @@ www/media/*
 media/*
 *.o
 test_server
+tester_daemon
