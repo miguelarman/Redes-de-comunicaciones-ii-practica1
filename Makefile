@@ -80,6 +80,7 @@
 CC = gcc
 CFLAGS = -g -Wall -ansi -pedantic
 FILES = tester_daemon test_server
+TESTERS = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
 OBJECTSTEST_SERVER = srclib/connection.o srclib/procesa_peticion.o srclib/picohttpparser.o testers/test_server.o
@@ -88,6 +89,11 @@ OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o srclib/pic
 ########################################################
 
 all: $(FILES) clear
+
+testers: $(TESTERS) clear
+
+test_server_exe: test_server
+	valgrind --leak-check=full ./test_server
 
 tester_daemon: $(OBJECTSTESTER_DAEMON)
 	$(CC) $(CFLAGS) -o tester_daemon $(OBJECTSTESTER_DAEMON)
