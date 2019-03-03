@@ -12,7 +12,7 @@ int close_server = 0;
 int listendfd;
 
 void sig_int(int signum) {
-  shutdown(listenfd, SHUT_RDWR);      /* cierra el socket del servidor */
+  shutdown(listenfd, SHUT_RD);      /* cierra el socket del servidor */
   close_server = 1;
   exit(1);
 }
@@ -102,21 +102,23 @@ int main(int argc, char **argv)
     connfd = accept(listenfd, cliaddr, &clilen);
 
     if (close_server == 1) {
-      for (i = 0; i < THREAD_COUNT; i++) {
-        client_create(c, 0, 1);
-        blockingQueue_put(queue, *c);
-      }
-
-      for (i = 0; i < THREAD_COUNT; i++) {
-        pthread_join(threads[i], NULL);
-      }
-
-      blockingQueue_destroy(queue);
-      free(c);
-      return SUCCESS;
+      break;
     }
 
     client_create(c, connfd, 0);
     blockingQueue_put(queue, *c);
   }
+
+  for (i = 0; i < THREAD_COUNT; i++) {
+    client_create(c, 0, 1);
+    blockingQueue_put(queue, *c);
+  }
+
+  for (i = 0; i < THREAD_COUNT; i++) {
+    pthread_join(threads[i], NULL);
+  }
+
+  blockingQueue_destroy(queue);
+  free(c);
+  return SUCCESS;
 }
