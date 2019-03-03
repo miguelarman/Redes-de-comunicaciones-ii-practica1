@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <sys/socket.h>
 
 
 #define SERVER_PORT 9999
 #define SERVER_IP "127.0.0.1"
-/*#define SERVER_IP "192.168.1.39" /* Direccion en la red local para probar desde otro dispositivo */
+/*#define SERVER_IP "192.168.1.39"*/ /* Direccion en la red local para probar desde otro dispositivo */
 
 void cierre_usuario(int senal);
 
@@ -43,8 +44,17 @@ int main() {
 
 void cierre_usuario(int senal) {
   /* Cierra la conexión y el socket */
-  close_connection(connfd);
-  close_connection(socketfd);
+  if (close_connection(connfd) < 0) {
+    /* TODO */
+    perror("Error al cerrar la conexion");
+  }
+
+  if (close_connection(socketfd) < 0) {
+    /* TODO */
+    perror("Error al cerrar el socket");
+  }
+
+  /* DEBUG */printf("Saliendo de las conexiones\n");
 
   exit(EXIT_SUCCESS);
 }
