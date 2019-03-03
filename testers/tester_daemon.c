@@ -18,7 +18,7 @@ int main () {
 
   printf("Testing demonizar(). Check syslog to see correct functioning\n");
 
-  r = demonizar("test");
+  r = demonizar();
 
   printf("Returned: %d", r);
   if (r == 0) {

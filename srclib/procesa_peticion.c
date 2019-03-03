@@ -31,8 +31,8 @@
 #define REQUESTISTOOLONGERROR -3
 #define IOERROR -4
 
-#define INDEX_BASICO "media/www/index.html"
-#define PAGINA_404   "media/www/404.html"
+#define INDEX_BASICO "/www/index.html"
+#define PAGINA_404   "/www/404.html"
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
 
@@ -90,7 +90,7 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 
 int _responder_bad_request (int connfd);
 
-int funcionalidad_get(char *ruta_fichero, int connfd);
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
 
 
 
@@ -99,9 +99,9 @@ int procesa_peticion (int connfd, char *resources_path) {
   char *verbo_peticion      = NULL;
   char *ruta_fichero        = NULL;
   char *cabecera_respuesta  = NULL;
-  char *buf;
-  char *method;
-  char *path;
+  char *buf                 = NULL;
+  char *method              = NULL;
+  char *path                = NULL;
   int   retorno;
   int   pret;
   int   minor_version;
@@ -135,10 +135,6 @@ int i;
   num_headers   = campos_parseados.num_headers;
   rret          = campos_parseados.rret;
 
-
-
-
-
   /* DEBUG PRINTEAR LA REQUEST PARA DEBUGGEAR */
   /* printf("request is %d bytes long\n", pret);
   printf("method is %.*s\n", (int)method_len, method);
@@ -151,8 +147,13 @@ int i;
     printf("%.*s: %.*s\n", (int)headers[i].name_len, headers[i].name, (int)headers[i].value_len, headers[i].value);
   } */
 
-
-
+  /* Comprobaciones de argumentos */
+  if (resources_path == NULL) {
+    /* TODO */
+  }
+  if (connfd < 0) {
+    /* TODO */
+  }
 
 
   if ((verbo_peticion = (char *)malloc(((int)method_len + 1) * sizeof(char))) == NULL) {
@@ -179,24 +180,22 @@ int i;
 
     } else {*/
 
-    retorno = funcionalidad_get(ruta_fichero, connfd);
+    retorno = funcionalidad_get(ruta_fichero, resources_path, connfd);
     if (retorno != OK) {
       /* TODO */
     }
 
-  } else if (strcmp(verbo_peticion, "GET") == 0) { /* Petición GET */
+  } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
+
+  } else if (strcmp(verbo_peticion, "OPTIONS") == 0) { /* Petición POST */
 
   } else {
     /* TODO Verbo no soportado */
     retorno = _responder_bad_request(connfd);
   }
 
-
-
   free(verbo_peticion);
-
   free(cabecera_respuesta);
-
 
   return ERROR;
 }
@@ -399,6 +398,7 @@ int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_len
   } else {
     if (stat(ruta_fichero, &statbuf) < 0) {
       /* TODO */
+      perror("Error con el stat");
     }
     *tamanio_fichero = statbuf.st_size;
   }
@@ -577,7 +577,7 @@ int _responder_bad_request (int connfd) {
 }
 
 
-int funcionalidad_get(char *ruta_fichero, int connfd) {
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
 
   int   bytes_mandados      =  0;
   int   tamanio_fichero     =  0;
@@ -586,24 +586,34 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   int   fichero_a_mandar_df = -1;
   int   retorno             =  ERROR;
   char *cabecera_respuesta  = NULL;
+  char *ruta_absoluta       = NULL;
 
+  /* Guarda la ruta relativa del fichero pedido */
   if (strcmp(ruta_fichero, "/") == 0) {
     /* Responder html básico */
     free(ruta_fichero);
     path_len = strlen(INDEX_BASICO);
     ruta_fichero = (char *)malloc((path_len + 1) * sizeof(char));
     strcpy(ruta_fichero, INDEX_BASICO);
-
   }
-  if (ruta_fichero[0] == '/') {
+
+  /* if (ruta_fichero[0] == '/') { */
     /* Eliminar el / del principio de la cadena */
-    char *nueva_ruta_fichero = (char *)malloc(strlen(ruta_fichero) * sizeof(char));
+    /*char *nueva_ruta_fichero = (char *)malloc(strlen(ruta_fichero) * sizeof(char));
     strcpy(nueva_ruta_fichero, ruta_fichero + 1);
 
     free(ruta_fichero);
     ruta_fichero = nueva_ruta_fichero;
+  }*/
+
+  ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
+  if (ruta_absoluta == NULL) {
+    /* TODO */
   }
 
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
+    /* TODO */
+  }
 
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
@@ -613,7 +623,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
 
 
   /* Abre el fichero pedido */
-  fichero_a_mandar_df = open(ruta_fichero, O_RDONLY);
+  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
 
 
   /* Forma la cabecera */
@@ -639,12 +649,17 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
     }
 
     /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
-    free(ruta_fichero);
-    path_len = strlen(PAGINA_404);
-    ruta_fichero = (char *)malloc(((int)path_len + 1) * sizeof(char));
-    strcpy(ruta_fichero, PAGINA_404);
+    free(ruta_absoluta);
+    ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
+    if (ruta_absoluta == NULL) {
+      /* TODO */
+    }
 
-    fichero_a_mandar_df = open(ruta_fichero, O_RDONLY);
+    if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
+      /* TODO */
+    }
+
+    fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
     if (fichero_a_mandar_df < 0) {
       /* TODO */
     }
@@ -667,13 +682,13 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   /* 2. Escribe los campos de cabecera */
 
   /* 2.1 Escribe el tipo de fichero */
-  retorno = _cabecera_anadir_tipo_fichero(cabecera_respuesta, &cabecera_length, ruta_fichero);
+  retorno = _cabecera_anadir_tipo_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta);
   if (retorno != OK) {
     /* TODO */
   }
 
   /* 2.2 Escribe el tamaño de fichero */
-  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, ruta_fichero, &tamanio_fichero);
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta, &tamanio_fichero);
   if (retorno != OK) {
     /* TODO */
   }
@@ -687,7 +702,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   if (fichero_a_mandar_df >= 0) { /* Se ha pedido un archivo que existe */
 
     /* 2.4. Escribe la hora de ultima modificacion del fichero */
-    retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_fichero);
+    retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_absoluta);
     if (retorno != OK) {
       /* TODO */
     }
@@ -724,6 +739,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   }
 
   free(ruta_fichero);
+  free(ruta_absoluta);
   free(cabecera_respuesta);
 
   return OK;

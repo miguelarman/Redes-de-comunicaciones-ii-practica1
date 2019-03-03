@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/socket.h>
 
 
@@ -18,8 +19,12 @@ int connfd;
 
 int main() {
 
+  char cwd[2048];
+
   struct sockaddr_in client_addr;
-  int addrlen = sizeof(client_addr);
+  int addrlen;
+
+  addrlen = sizeof(client_addr);
 
   signal(SIGINT, cierre_usuario);
 
@@ -29,13 +34,18 @@ int main() {
     printf("Error en tcp_listen\n");
     exit(-1);
   }
-  printf("Escuchando en [%s:%d]...\n", SERVER_IP, SERVER_PORT);
+  printf("Escuchando en [%s:%d]...\n\n", SERVER_IP, SERVER_PORT);
+
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    /* TODO */
+  }
+  strcat(cwd, "/resources");
 
   while (1) {
     connfd = accept_connection(socketfd, (struct sockaddr*)&client_addr, (socklen_t *)&addrlen);
     printf("Conexión desde [%s:%d]\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-    procesa_peticion(connfd, NULL);
+    procesa_peticion(connfd, cwd);
 
     close_connection(connfd);
   }
@@ -44,17 +54,21 @@ int main() {
 
 void cierre_usuario(int senal) {
   /* Cierra la conexión y el socket */
-  if (close_connection(connfd) < 0) {
-    /* TODO */
-    perror("Error al cerrar la conexion");
+  if (connfd >= 0) {
+    if (close_connection(connfd) < 0) {
+      /* TODO */
+      perror("\nError al cerrar la conexion");
+    }
   }
 
-  if (close_connection(socketfd) < 0) {
-    /* TODO */
-    perror("Error al cerrar el socket");
+  if (socketfd >= 0) {
+    if (close_connection(socketfd) < 0) {
+      /* TODO */
+      perror("\nError al cerrar el socket");
+    }
   }
 
-  /* DEBUG */printf("Saliendo de las conexiones\n");
+  /* DEBUG */printf("\nSaliendo de las conexiones\n");
 
   exit(EXIT_SUCCESS);
 }

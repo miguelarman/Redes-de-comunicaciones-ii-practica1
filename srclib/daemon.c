@@ -5,17 +5,11 @@
 #define OK 0
 #define ERROR -1
 
-int demonizar(char *servicio) {
+int demonizar(void) {
 
   pid_t child_pid;
   int max_fd, i;
 
-
-  /* Comprobamos el parametro*/
-  if (servicio == NULL) {
-    printf("Error con el parametro especificado en demonizar()\n");
-    return ERROR;
-  }
 
   /* Crear un proceso hijo y terminar el proceso padre */
   child_pid = fork();
