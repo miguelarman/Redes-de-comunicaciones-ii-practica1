@@ -19,9 +19,10 @@
 #define ERROR -1
 #define OK 0
 
+/* TODO Valores a revisar */
 #define MAX_FECHA        512
 #define MAX_TIPO_FICHERO 32
-#define MAX_CABECERA     10000 /* TODO Valores a revisar */
+#define MAX_CABECERA     10000
 #define MAX_LINEA        512
 
 #define TAMANIO_CHUNK 1024
@@ -30,9 +31,8 @@
 #define REQUESTISTOOLONGERROR -3
 #define IOERROR -4
 
-/* #define INDEX_BASICO "www/index_prueba.html" */
-#define INDEX_BASICO "www/index.html"
-#define PAGINA_404 "www/404.html"
+#define INDEX_BASICO "media/www/index.html"
+#define PAGINA_404   "media/www/404.html"
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
 
@@ -94,48 +94,46 @@ int funcionalidad_get(char *ruta_fichero, int connfd);
 
 
 
-int procesa_peticion (int connfd) {
+int procesa_peticion (int connfd, char *resources_path) {
 
   char *verbo_peticion      = NULL;
   char *ruta_fichero        = NULL;
   char *cabecera_respuesta  = NULL;
-  int   retorno;
-  Parsear ret;
-
-
   char *buf;
   char *method;
   char *path;
-  int pret;
-  int minor_version;
+  int   retorno;
+  int   pret;
+  int   minor_version;
   struct phr_header *headers;
-  size_t buflen;
-  size_t prevbuflen;
-  size_t method_len;
-  size_t path_len;
-  size_t num_headers;
+  Parsear campos_parseados;
+  size_t  buflen;
+  size_t  prevbuflen;
+  size_t  method_len;
+  size_t  path_len;
+  size_t  num_headers;
   ssize_t rret;
 
 int i;
 
-  retorno = parsear_peticion(connfd, &ret);
+  retorno = parsear_peticion(connfd, &campos_parseados);
   if (retorno != OK) {
     /* TODO */
   }
 
   /* Guardo los valores guardados por parsear_peticion en la estructura */
-  buf = ret.buf;
-  method = ret.method;
-  path = ret.path;
-  pret = ret.pret;
-  minor_version = ret.minor_version;
-  headers = ret.headers;
-  buflen = ret.buflen;
-  prevbuflen = ret.prevbuflen;
-  method_len = ret.method_len;
-  path_len = ret.path_len;
-  num_headers = ret.num_headers;
-  rret = ret.rret;
+  buf           = campos_parseados.buf;
+  method        = campos_parseados.method;
+  path          = campos_parseados.path;
+  pret          = campos_parseados.pret;
+  minor_version = campos_parseados.minor_version;
+  headers       = campos_parseados.headers;
+  buflen        = campos_parseados.buflen;
+  prevbuflen    = campos_parseados.prevbuflen;
+  method_len    = campos_parseados.method_len;
+  path_len      = campos_parseados.path_len;
+  num_headers   = campos_parseados.num_headers;
+  rret          = campos_parseados.rret;
 
 
 
@@ -210,39 +208,49 @@ int i;
 /**************************************************************/
 
 
-int parsear_peticion(int connfd, Parsear *ret) {
+int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
 
-  ret->buflen = 0;
-  ret->prevbuflen = 0;
+  campos_a_parsear->buflen = 0;
+  campos_a_parsear->prevbuflen = 0;
 
   while (1) {
     /* read the request */
-    while ((ret->rret = read(connfd, ret->buf + ret->buflen, sizeof(ret->buf) - ret->buflen)) == -1 && errno == EINTR) {
+    while ((campos_a_parsear->rret = read(connfd, campos_a_parsear->buf + campos_a_parsear->buflen, sizeof(campos_a_parsear->buf) - campos_a_parsear->buflen)) == -1
+          && errno == EINTR) {
 
     }
 
-    if (ret->rret <= 0) {
+    if (campos_a_parsear->rret <= 0) {
       return IOERROR;
     }
 
-    ret->prevbuflen = ret->buflen;
-    ret->buflen += ret->rret;
+    campos_a_parsear->prevbuflen = campos_a_parsear->buflen;
+    campos_a_parsear->buflen += campos_a_parsear->rret;
 
     /* parse the request */
-    ret->num_headers = sizeof(ret->headers) / sizeof(ret->headers[0]);
-    ret->pret = phr_parse_request(ret->buf, ret->buflen, (const char **) &(ret->method),
-                                &(ret->method_len), (const char **) &(ret->path), &(ret->path_len),
-                                &(ret->minor_version), ret->headers, &(ret->num_headers), ret->prevbuflen);
+    campos_a_parsear->num_headers = sizeof(campos_a_parsear->headers) /
+                                    sizeof(campos_a_parsear->headers[0]);
+    campos_a_parsear->pret = phr_parse_request(
+                                      campos_a_parsear->buf,
+                                      campos_a_parsear->buflen,
+                                      (const char **) &(campos_a_parsear->method),
+                                      &(campos_a_parsear->method_len),
+                                      (const char **) &(campos_a_parsear->path),
+                                      &(campos_a_parsear->path_len),
+                                      &(campos_a_parsear->minor_version),
+                                      campos_a_parsear->headers,
+                                      &(campos_a_parsear->num_headers),
+                                      campos_a_parsear->prevbuflen);
 
-    if (ret->pret > 0) {
+    if (campos_a_parsear->pret > 0) {
       break; /* successfully parsed the request */
-    } else if (ret->pret == -1) {
+    } else if (campos_a_parsear->pret == -1) {
       return PARSEERROR;
     }
 
     /* request is incomplete, continue the loop */
-    assert(ret->pret == -2);
-    if (ret->buflen == sizeof(ret->buf)) {
+    assert(campos_a_parsear->pret == -2);
+    if (campos_a_parsear->buflen == sizeof(campos_a_parsear->buf)) {
       return REQUESTISTOOLONGERROR;
     }
   }
@@ -559,9 +567,6 @@ int _responder_bad_request (int connfd) {
     /* TODO */
   }
 
-  /* DEBUG */
-  /*printf("Cabecera:\n%s\n", cabecera_respuesta);*/
-
   /* TODO 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
     /* TODO */
@@ -599,10 +604,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
     ruta_fichero = nueva_ruta_fichero;
   }
 
-  /* DEBUG *//*printf("Fichero a mandar: %s\n", ruta_fichero);*/
 
-  /* DEBUG */
-  /*printf("--------------\n");*/
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
@@ -610,14 +612,11 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   }
 
 
-  /* TODO */
   /* Abre el fichero pedido */
   fichero_a_mandar_df = open(ruta_fichero, O_RDONLY);
-  /* DEBUG */
-  /*printf("Llama a open: %d\n", fichero_a_mandar_df);*/
 
 
-  /* Forma todos los campos de la cabecera */
+  /* Forma la cabecera */
 
   /* 1.1 Escribe la version */
   retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
@@ -626,6 +625,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   }
 
   if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
+
     /* 1.2 Escribe el codigo de respuesta */
     retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_NOT_FOUND_CODE);
     if (retorno != OK) {
@@ -645,11 +645,12 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
     strcpy(ruta_fichero, PAGINA_404);
 
     fichero_a_mandar_df = open(ruta_fichero, O_RDONLY);
-    /* DEBUG *//*printf("Nuevo fd: %d\n", fichero_a_mandar_df);*/
     if (fichero_a_mandar_df < 0) {
       /* TODO */
     }
+
   } else {
+
     /* 1.2 Escribe el codigo de respuesta */
     retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
     if (retorno != OK) {
@@ -684,7 +685,8 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   }
 
   if (fichero_a_mandar_df >= 0) { /* Se ha pedido un archivo que existe */
-    /* 2.4. Escribe la hora de ultima modificacion */
+
+    /* 2.4. Escribe la hora de ultima modificacion del fichero */
     retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_fichero);
     if (retorno != OK) {
       /* TODO */
@@ -697,8 +699,6 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
     /* TODO */
   }
 
-  /* DEBUG */
-  /*printf("Cabecera:\n%s\n", cabecera_respuesta);*/
 
   /* TODO 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
@@ -716,7 +716,7 @@ int funcionalidad_get(char *ruta_fichero, int connfd) {
   }
 
   /* DEBUG */
-  printf("----------------------\n\n");
+  printf("----------------------\n");
 
 
   if (fichero_a_mandar_df > 0) {

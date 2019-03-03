@@ -1,5 +1,4 @@
-www/media/*
-media/*
+resources/media/*
 *.o
 test_server
 tester_daemon

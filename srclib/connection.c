@@ -1,10 +1,9 @@
 #include "../includes/connection.h"
 
-#define BACKLOG 10
 #define ERROR -1
 
 
-int tcp_listen(char *ip, int port) {
+int tcp_listen(char *ip, int port, int backlog) {
   struct sockaddr_in addr;
   int sockfd;
 
@@ -26,7 +25,7 @@ int tcp_listen(char *ip, int port) {
     return ERROR_BIND;
   }
 
-  if (listen(sockfd, BACKLOG) < 0) {
+  if (listen(sockfd, backlog) < 0) {
     /*  TODO */
     perror("Error en el listen");
   }

@@ -23,7 +23,7 @@ int main() {
 
   signal(SIGINT, cierre_usuario);
 
-  socketfd = tcp_listen(SERVER_IP, SERVER_PORT);
+  socketfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
   if (socketfd == ERROR_BIND) {
     /* TODO */
     printf("Error en tcp_listen\n");
@@ -35,7 +35,7 @@ int main() {
     connfd = accept_connection(socketfd, (struct sockaddr*)&client_addr, (socklen_t *)&addrlen);
     printf("Conexión desde [%s:%d]\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-    procesa_peticion(connfd);
+    procesa_peticion(connfd, NULL);
 
     close_connection(connfd);
   }

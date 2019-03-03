@@ -13,7 +13,7 @@
 #define ERROR_BIND -2
 
 
-int tcp_listen(char *ip, int port);
+int tcp_listen(char *ip, int port, int backlog);
 
 int accept_connection(int sockfd, struct sockaddr* addr, socklen_t *addrlen);
 

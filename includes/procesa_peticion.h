@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 
 
-int procesa_peticion (int connfd);
+int procesa_peticion (int connfd, char *resources_path);
 
 
 #endif
