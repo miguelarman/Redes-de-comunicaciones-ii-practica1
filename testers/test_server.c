@@ -1,10 +1,13 @@
 #include "../includes/connection.h"
-#include "../includes/procesa_peticion.h"
+#include "../includes/procesa_conexion.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 
 #define SERVER_PORT 9999
@@ -41,15 +44,24 @@ int main() {
   }
   strcat(cwd, "/resources");
 
+  int i;
+  for (i = 0; i < 3; i++) {
+    fork();
+  }
+
   while (1) {
     connfd = accept_connection(socketfd, (struct sockaddr*)&client_addr, (socklen_t *)&addrlen);
     printf("Conexión desde [%s:%d]\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-    procesa_peticion(connfd, cwd);
+    procesa_conexion(connfd, cwd);
 
     close_connection(connfd);
+
+    /*break;*/
   }
   close_connection(socketfd);
+
+  return 0;
 }
 
 void cierre_usuario(int senal) {
@@ -67,8 +79,6 @@ void cierre_usuario(int senal) {
       perror("\nError al cerrar el socket");
     }
   }
-
-  /* DEBUG */printf("\nSaliendo de las conexiones\n");
 
   exit(EXIT_SUCCESS);
 }
