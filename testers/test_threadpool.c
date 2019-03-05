@@ -10,6 +10,7 @@ struct _client {
     int connfd;
     int poisoned;
 };
+
 /*
   Esta es la estructura que se pasa por la cola bloqueante para
   que los hilos la procesen
