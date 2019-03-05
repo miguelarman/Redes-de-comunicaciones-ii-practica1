@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "confuse.h"
 #include "../includes/configParser.h"
@@ -25,29 +27,13 @@ int parseConfig(char *conffile, configOptions *out_confopt) {
     return ERROR;
   }
 
-  out_confopt->server_root = cfg_getstr(cfg, "server_root");
+  strcpy(out_confopt->server_root, cfg_getstr(cfg, "server_root"));
   out_confopt->max_clients = cfg_getint(cfg, "max_clients");
   out_confopt->listen_port = cfg_getint(cfg, "listen_port");
-  out_confopt->server_signature = cfg_getstr(cfg, "server_signature");
+  strcpy(out_confopt->server_signature, cfg_getstr(cfg, "server_signature"));
   out_confopt->thread_count = cfg_getint(cfg, "thread_count");
   out_confopt->queue_size = cfg_getint(cfg, "queue_size");
 
   cfg_free(cfg);
   return SUCCESS;
-}
-
-int main() {
-  char *cf = "server.conf";
-  configOptions opt;
-
-  if (parseConfig(cf, &opt) == ERROR) {
-    return ERROR;
-  }
-
-  printf("server_root: %s\n", opt.server_root);
-  printf("max_clients: %d\n", opt.max_clients);
-  printf("listen_port: %d\n", opt.listen_port);
-  printf("server_signature: %s\n", opt.server_signature);
-  printf("thread_count: %d\n", opt.thread_count);
-  printf("queue_size: %d\n", opt.queue_size);
 }

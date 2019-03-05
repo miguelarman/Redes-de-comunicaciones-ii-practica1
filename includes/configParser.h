@@ -8,15 +8,17 @@
 #define DEFAULT_THREAD_COUNT 20
 #define DEFAULT_QUEUE_SIZE 20
 
+#define MAX_STR 100
+
 #define ERROR -1
 #define SUCCESS 0
 
 typedef struct
 {
-  char *server_root;
+  char server_root[MAX_STR];
   int max_clients;
   int listen_port;
-  char *server_signature;
+  char server_signature[MAX_STR];
   int thread_count;
   int queue_size;
 } configOptions;

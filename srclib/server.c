@@ -7,6 +7,7 @@
 
 #include "../includes/blockingQueue.h"
 #include "../includes/servidor_threadpool.h"
+#include "../includes/configParser.h"
 
 int close_server = 0;
 int listendfd;
@@ -84,6 +85,21 @@ int main(int argc, char **argv)
   blockingQueue *queue;
   pthread_t threads[THREAD_COUNT];
   client **c;
+  configOptions opts;
+  char abspath[MAX_STR];
+
+  /* Se parsean los parametros del fichero de configuracion */
+  if (parseConfig("server.conf", &opts) == ERROR) {
+    return ERROR;
+  }
+
+  /* Se concatena el directorio de trabajo al server root */
+  if (getcwd(abspath, MAX_STR) == NULL) {
+    return ERROR;
+  }
+  strcat(abspath, opts.server_root);
+  
+  /* Se demoniza */
 
   c = (client **)malloc(sizeof(client *));
 
