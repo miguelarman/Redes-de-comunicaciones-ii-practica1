@@ -21,6 +21,8 @@
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
 
+#define ALLOW_LISTA "OPTIONS, GET, POST"
+
 #define RESPONSE_OK_CODE          200
 #define RESPONSE_BAD_REQUEST_CODE 400
 #define RESPONSE_NOT_FOUND_CODE   404
@@ -64,6 +66,8 @@ int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera
 int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
 
 int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
+
+int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length);
 
 int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero);
 
@@ -177,7 +181,7 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
   } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
 
-    retorno = _responder_bad_request(connfd);
+    retorno = funcionalidad_options(connfd);
     if (retorno != OK) {
       /* TODO */
     }
@@ -341,6 +345,81 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
   return OK;
 }
 
+int funcionalidad_options(int connfd) {
+
+  int tamanio_fichero;
+  int retorno;
+  char *cabecera_respuesta = NULL;
+  int cabecera_length;
+
+  /* Reserva memoria para la cabecera de respuesta */
+  cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
+  if (cabecera_respuesta == NULL) {
+    /* TODO */
+  }
+
+  /* 1.1 Escribe la version */
+  retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.2 Escribe el codigo de respuesta */
+  retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.3 Escribe la frase de respuesta */
+  retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_FRASE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2. Escribe los campos de cabecera */
+
+  /* 2.1 Escribe el campo Allow */
+  retorno = _cabecera_anadir_allow(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.2 Escribe el tamaño de fichero (0) */
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.3. Escribe la fecha y hora actuales */
+  retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.5 Termina la cabecera */
+  retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* TODO 3. Manda la cabecera */
+  if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
+    /* TODO */
+  }
+
+  free(cabecera_respuesta);
+
+
+  /*************************************************/
+
+  retorno = _responder_bad_request(connfd);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+}
+
 int ejecutar_script(int connfd, char *ruta_absoluta) {
 
   char *ruta_script = NULL;
@@ -498,6 +577,29 @@ int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera
 
   free(linea_modificado);
   return OK;
+}
+
+int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length) {
+
+  char *linea_allow = NULL;
+
+  linea_allow = (char *)calloc(1, MAX_LINEA * sizeof(char));
+  if (linea_allow == NULL) {
+    /* TODO */
+  }
+
+  *cabecera_length += sprintf(linea_allow, "Allow:%s\r\n", ALLOW_LISTA);
+  if (linea_allow == NULL) {
+    /* TODO */
+  }
+  strcat(cabecera_respuesta, linea_allow);
+  if (cabecera_respuesta == NULL) {
+    /* TODO */
+  }
+
+  free(linea_allow);
+  return OK;
+
 }
 
 int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero) {
@@ -720,6 +822,8 @@ int _responder_404(int connfd, char *resources_path) {
     /* TODO */
   }
 
+  free(ruta_absoluta);
+
   return OK;
 
 }
@@ -845,12 +949,14 @@ int _fichero_es_script(char *ruta) {
   punto = strrchr(ruta_auxiliar, '.');
 
   if (punto == NULL || punto == ruta_auxiliar) {
+    free(ruta_auxiliar);
     return FALSE;
   }
 
   interrogacion = strrchr(ruta_auxiliar, '?');
 
   if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
+    free(ruta_auxiliar);
     return FALSE;
   } else {
     interrogacion[0] = '\0';
