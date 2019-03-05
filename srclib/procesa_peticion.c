@@ -53,7 +53,11 @@
 #define EXTENSION_PHP    ".php"
 
 
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
+
 char * _tipo_archivo(char *ruta);
+
+int ejecutar_script(int connfd, char *ruta_absoluta);
 
 int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera_length);
 
@@ -79,9 +83,9 @@ int _responder_404 (int connfd, char *resources_path);
 
 int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_fichero, int fichero_a_mandar_df);
 
-int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
-
 int _fichero_es_script(char *ruta);
+
+int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p);
 
 
 
@@ -299,13 +303,10 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
 
   /* TODO Peticion GET a un script */
   if (_fichero_es_script(ruta_absoluta) == TRUE) {
-    /* TODO retorno = ejecutar_script(connfd, ruta_absoluta); */
-    /* if (retorno != OK) { */
+    retorno = ejecutar_script(connfd, ruta_absoluta);
+    if (retorno != OK) {
       /* TODO */
-    /* } */
-
-    /* DEBUG */
-    _responder_bad_request(connfd);
+    }
 
   } else { /* Se ha solicitado un fichero */
 
@@ -340,6 +341,34 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
   return OK;
 }
 
+int ejecutar_script(int connfd, char *ruta_absoluta) {
+
+  char *ruta_script = NULL;
+  char *variables = NULL;
+  int   retorno;
+
+  retorno = get_ruta_script_y_variables(ruta_absoluta, &ruta_script, &variables);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* DEBUG */if (ruta_script == NULL || variables == NULL) {
+    printf("Devuelve NULL\n");
+  }
+
+  /* DEBUG */printf("Valores pasados al script por GET:\n\tRuta del script: %s\n\tVariables: %s\n", ruta_script, variables);
+
+
+  /* TODO Ejecutar script pasando las peticiones y mandar respuesta */
+
+
+  /***************/
+
+  /* DEBUG */
+  _responder_bad_request(connfd);
+
+  return OK;
+}
 
 char * _tipo_archivo(char *ruta) {
 
@@ -797,31 +826,97 @@ int _fichero_es_script(char *ruta) {
 
   char *punto         = NULL;
   char *interrogacion = NULL;
+  char *ruta_auxiliar = NULL;
+  int flag;
 
   if (ruta == NULL) {
     return FALSE;
   }
 
+  ruta_auxiliar = (char *)malloc((strlen(ruta) + 1) * sizeof(char));
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+  strcpy(ruta_auxiliar, ruta);
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
 
-  punto = strrchr(ruta, '.');
+  punto = strrchr(ruta_auxiliar, '.');
 
-  if (punto == NULL || punto == ruta) {
+  if (punto == NULL || punto == ruta_auxiliar) {
     return FALSE;
   }
 
-  interrogacion = strrchr(ruta, '?');
+  interrogacion = strrchr(ruta_auxiliar, '?');
 
-  if (interrogacion == NULL || interrogacion == ruta) {
+  if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
     return FALSE;
   } else {
     interrogacion[0] = '\0';
   }
 
   if (strcmp(punto, EXTENSION_PYTHON) == 0) {
-    return TRUE;
+    flag = TRUE;
   } else if (strcmp(punto, EXTENSION_PHP) == 0) {
-    return TRUE;
+    flag = TRUE;
   } else {
-    return FALSE;
+    flag = FALSE;
+  }
+
+  free(ruta_auxiliar);
+
+  return flag;
+}
+
+int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p) {
+
+  /* TODO */
+
+  char *interrogacion = NULL;
+  char *ruta_auxiliar = NULL;
+  char *variables_aux = NULL;
+
+  ruta_auxiliar = (char *)malloc((strlen(ruta_absoluta) + 1) * sizeof(char));
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+  strcpy(ruta_auxiliar, ruta_absoluta);
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+
+
+  interrogacion = strrchr(ruta_auxiliar, '?');
+
+  if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
+    return ERROR;
+  } else {
+    interrogacion[0] = '\0';
+
+    variables_aux = interrogacion + 1;
+
+    *ruta_script_p = (char *)malloc((strlen(ruta_auxiliar) + 1) * sizeof(char));
+    if (*ruta_script_p == NULL) {
+      /* TODO */
+    }
+    strcpy(*ruta_script_p, ruta_auxiliar);
+    if (*ruta_script_p == NULL) {
+      /* TODO */
+    }
+
+    *variables_p = (char *)malloc((strlen(variables_aux) + 1) * sizeof(char));
+    if (*variables_p == NULL) {
+      /* TODO */
+    }
+    strcpy(*variables_p, variables_aux);
+    if (*variables_p == NULL) {
+      /* TODO */
+    }
+
+
+    free(ruta_auxiliar);
+
+    return OK;
   }
 }
