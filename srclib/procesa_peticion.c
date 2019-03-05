@@ -1,23 +1,12 @@
 #define _POSIX_C_SOURCE 199309L
 
 #include "../includes/procesa_peticion.h"
-#include "../includes/picohttpparser.h"
-#include <errno.h>
-#include <unistd.h>
-#include <assert.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <string.h>
-#include <sys/sendfile.h>
-#include <fcntl.h>
-#include <time.h>
-#include <errno.h>
-
 
 
 #define ERROR -1
 #define OK 0
+#define TRUE 1
+#define FALSE 0
 
 /* TODO Valores a revisar */
 #define MAX_FECHA        512
@@ -27,14 +16,12 @@
 
 #define TAMANIO_CHUNK 1024
 
-#define PARSEERROR -2
-#define REQUESTISTOOLONGERROR -3
-#define IOERROR -4
-
 #define INDEX_BASICO "/www/index.html"
 #define PAGINA_404   "/www/404.html"
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
+
+#define ALLOW_LISTA "OPTIONS, GET, POST"
 
 #define RESPONSE_OK_CODE          200
 #define RESPONSE_BAD_REQUEST_CODE 400
@@ -49,32 +36,38 @@
 #define JPEG_TYPE  "image/jpeg"
 #define GIF_TYPE   "image/gif"
 #define TXT_TYPE   "text/plain"
+#define MPEG_TYPE  "video/mpeg"
+#define PDF_TYPE   "application/pdf"
+#define DOC_TYPE   "application/msword"
+#define DOCX_TYPE  "application/msword"
 #define OTHER_TYPE "text/plain"
 
-typedef struct Parsear_ {
-  char buf[4096];
-  char *method;
-  char *path;
-  int pret;
-  int minor_version;
-  struct phr_header headers[100];
-  size_t buflen;
-  size_t prevbuflen;
-  size_t method_len;
-  size_t path_len;
-  size_t num_headers;
-  ssize_t rret;
-} Parsear;
+#define EXTENSION_HTML   ".html"
+#define EXTENSION_JPG    ".jpg"
+#define EXTENSION_JPEG   ".jpeg"
+#define EXTENSION_GIF    ".gif"
+#define EXTENSION_TXT    ".txt"
+#define EXTENSION_MPEG   ".mpeg"
+#define EXTENSION_PDF    ".pdf"
+#define EXTENSION_DOC    ".doc"
+#define EXTENSION_DOCX   ".docx"
+#define EXTENSION_PYTHON ".py"
+#define EXTENSION_PHP    ".php"
 
-int parsear_peticion(int connfd, Parsear *ret);
+
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
 
 char * _tipo_archivo(char *ruta);
+
+int ejecutar_script(int connfd, char *ruta_absoluta);
 
 int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera_length);
 
 int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
 
 int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
+
+int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length);
 
 int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero);
 
@@ -90,11 +83,17 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 
 int _responder_bad_request (int connfd);
 
-int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
+int _responder_404 (int connfd, char *resources_path);
+
+int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_fichero, int fichero_a_mandar_df);
+
+int _fichero_es_script(char *ruta);
+
+int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p);
 
 
 
-int procesa_peticion (int connfd, char *resources_path) {
+int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados) {
 
   char *verbo_peticion      = NULL;
   char *ruta_fichero        = NULL;
@@ -106,7 +105,6 @@ int procesa_peticion (int connfd, char *resources_path) {
   int   pret;
   int   minor_version;
   struct phr_header *headers;
-  Parsear campos_parseados;
   size_t  buflen;
   size_t  prevbuflen;
   size_t  method_len;
@@ -114,12 +112,13 @@ int procesa_peticion (int connfd, char *resources_path) {
   size_t  num_headers;
   ssize_t rret;
 
-int i;
+  int i;
 
-  retorno = parsear_peticion(connfd, &campos_parseados);
-  if (retorno != OK) {
-    /* TODO */
-  }
+  /*if (campos_parseados == NULL) {
+    return ERROR; *//* TODO */
+  /*}*/
+
+
 
   /* Guardo los valores guardados por parsear_peticion en la estructura */
   buf           = campos_parseados.buf;
@@ -175,11 +174,6 @@ int i;
       /* TODO */
     }
 
-    /* TODO Comprueba si es un script */
-    /* if (extension(ruta_fichero) == ".py") {
-
-    } else {*/
-
     retorno = funcionalidad_get(ruta_fichero, resources_path, connfd);
     if (retorno != OK) {
       /* TODO */
@@ -187,11 +181,25 @@ int i;
 
   } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
 
+    retorno = funcionalidad_options(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+
   } else if (strcmp(verbo_peticion, "OPTIONS") == 0) { /* Petición POST */
 
+    retorno = _responder_bad_request(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+
   } else {
+
     /* TODO Verbo no soportado */
     retorno = _responder_bad_request(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
   }
 
   free(verbo_peticion);
@@ -219,8 +227,19 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
 
     }
 
-    if (campos_a_parsear->rret <= 0) {
+    /* campos_a_parsear->rret = recv(connfd, campos_a_parsear->buf, 4096, 0); */
+
+    /* DEBUG *//*printf("Ha salido del bucle de read (%d bytes)\n", (int)campos_a_parsear->rret);*/
+
+    /*if (errno == EINTR) {
+      *//* DEBUG *//*printf("Ha recibido el timeout\n");
+      return CLOSE_CONNECTION_REQUEST;
+    }*/
+
+    if (campos_a_parsear->rret < 0) {
       return IOERROR;
+    } else if (campos_a_parsear->rret == 0) {
+      return CLOSE_CONNECTION_REQUEST;
     }
 
     campos_a_parsear->prevbuflen = campos_a_parsear->buflen;
@@ -257,6 +276,178 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
   return OK;
 }
 
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
+
+  int   bytes_mandados      =  0;
+  int   tamanio_fichero     =  0;
+  int   cabecera_length     =  0;
+  int   path_len            =  0;
+  int   fichero_a_mandar_df = -1;
+  int   retorno             =  ERROR;
+  char *cabecera_respuesta  = NULL;
+  char *ruta_absoluta       = NULL;
+
+  /* Guarda la ruta relativa del fichero pedido */
+  if (strcmp(ruta_fichero, "/") == 0) {
+    /* Responder html básico */
+    free(ruta_fichero);
+    path_len = strlen(INDEX_BASICO);
+    ruta_fichero = (char *)malloc((path_len + 1) * sizeof(char));
+    strcpy(ruta_fichero, INDEX_BASICO);
+  }
+
+  ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
+  if (ruta_absoluta == NULL) {
+    /* TODO */
+  }
+
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
+    /* TODO */
+  }
+
+  /* TODO Peticion GET a un script */
+  if (_fichero_es_script(ruta_absoluta) == TRUE) {
+    retorno = ejecutar_script(connfd, ruta_absoluta);
+    if (retorno != OK) {
+      /* TODO */
+    }
+
+  } else { /* Se ha solicitado un fichero */
+
+    /* Abre el fichero pedido */
+    fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+
+    if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
+
+      retorno = _responder_404(connfd, resources_path);
+      if (retorno != OK) {
+        /* TODO */
+      }
+
+    } else { /* El fichero pedido si que existe */
+
+      retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_absoluta, fichero_a_mandar_df);
+      if (retorno != OK) {
+        /* TODO */
+      }
+
+    }
+
+    /* DEBUG */
+    printf("----------------------\n");
+
+    free(ruta_absoluta);
+    free(ruta_fichero);
+
+    return OK;
+  }
+
+  return OK;
+}
+
+int funcionalidad_options(int connfd) {
+
+  int tamanio_fichero;
+  int retorno;
+  char *cabecera_respuesta = NULL;
+  int cabecera_length;
+
+  /* Reserva memoria para la cabecera de respuesta */
+  cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
+  if (cabecera_respuesta == NULL) {
+    /* TODO */
+  }
+
+  /* 1.1 Escribe la version */
+  retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.2 Escribe el codigo de respuesta */
+  retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.3 Escribe la frase de respuesta */
+  retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_FRASE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2. Escribe los campos de cabecera */
+
+  /* 2.1 Escribe el campo Allow */
+  retorno = _cabecera_anadir_allow(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.2 Escribe el tamaño de fichero (0) */
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.3. Escribe la fecha y hora actuales */
+  retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.5 Termina la cabecera */
+  retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* TODO 3. Manda la cabecera */
+  if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
+    /* TODO */
+  }
+
+  free(cabecera_respuesta);
+
+
+  /*************************************************/
+
+  retorno = _responder_bad_request(connfd);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+}
+
+int ejecutar_script(int connfd, char *ruta_absoluta) {
+
+  char *ruta_script = NULL;
+  char *variables = NULL;
+  int   retorno;
+
+  retorno = get_ruta_script_y_variables(ruta_absoluta, &ruta_script, &variables);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* DEBUG */if (ruta_script == NULL || variables == NULL) {
+    printf("Devuelve NULL\n");
+  }
+
+  /* DEBUG */printf("Valores pasados al script por GET:\n\tRuta del script: %s\n\tVariables: %s\n", ruta_script, variables);
+
+
+  /* TODO Ejecutar script pasando las peticiones y mandar respuesta */
+
+
+  /***************/
+
+  /* DEBUG */
+  _responder_bad_request(connfd);
+
+  return OK;
+}
 
 char * _tipo_archivo(char *ruta) {
 
@@ -272,22 +463,28 @@ char * _tipo_archivo(char *ruta) {
 
   if (punto == NULL || punto == ruta) {
     return OTHER_TYPE;
-  } else {
-    punto++;
   }
 
   extension = punto;
 
-  if (strcmp(extension, "html") == 0) {
+  if (strcmp(extension, EXTENSION_HTML) == 0) {
     return HTML_TYPE;
-  } else if (strcmp(extension, "jpg") == 0) {
+  } else if (strcmp(extension, EXTENSION_JPG) == 0) {
     return JPG_TYPE;
-  } else if (strcmp(extension, "jpeg") == 0) {
+  } else if (strcmp(extension, EXTENSION_JPEG) == 0) {
     return JPEG_TYPE;
-  } else if (strcmp(extension, "gif") == 0) {
+  } else if (strcmp(extension, EXTENSION_GIF) == 0) {
     return GIF_TYPE;
-  } else if (strcmp(extension, "txt") == 0) {
+  } else if (strcmp(extension, EXTENSION_TXT) == 0) {
     return TXT_TYPE;
+  } else if (strcmp(extension, EXTENSION_MPEG) == 0) {
+    return EXTENSION_MPEG;
+  } else if (strcmp(extension, EXTENSION_PDF) == 0) {
+    return PDF_TYPE;
+  } else if (strcmp(extension, EXTENSION_DOC) == 0) {
+    return DOC_TYPE;
+  } else if (strcmp(extension, EXTENSION_DOCX) == 0) {
+    return DOCX_TYPE;
   } else {
     return OTHER_TYPE;
   }
@@ -325,7 +522,6 @@ int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length
   if (linea_tipo == NULL) {
     /* TODO */
   }
-
 
   tipo_fichero = (char *)calloc(1, MAX_TIPO_FICHERO * sizeof(char));
   if (tipo_fichero == NULL) {
@@ -381,6 +577,29 @@ int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera
 
   free(linea_modificado);
   return OK;
+}
+
+int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length) {
+
+  char *linea_allow = NULL;
+
+  linea_allow = (char *)calloc(1, MAX_LINEA * sizeof(char));
+  if (linea_allow == NULL) {
+    /* TODO */
+  }
+
+  *cabecera_length += sprintf(linea_allow, "Allow:%s\r\n", ALLOW_LISTA);
+  if (linea_allow == NULL) {
+    /* TODO */
+  }
+  strcat(cabecera_respuesta, linea_allow);
+  if (cabecera_respuesta == NULL) {
+    /* TODO */
+  }
+
+  free(linea_allow);
+  return OK;
+
 }
 
 int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero) {
@@ -515,8 +734,9 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 int _responder_bad_request (int connfd) {
 
   char *cabecera_respuesta;
-  int cabecera_length = 0;
-  int retorno;
+  int   cabecera_length = 0;
+  int   tamanio_fichero;
+  int   retorno;
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
@@ -550,7 +770,7 @@ int _responder_bad_request (int connfd) {
   }
 
   /* 2.2 Escribe el tamaño de fichero */
-  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, NULL);
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
   if (retorno != OK) {
     /* TODO */
   }
@@ -576,55 +796,52 @@ int _responder_bad_request (int connfd) {
   return OK;
 }
 
+int _responder_404(int connfd, char *resources_path) {
 
-int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
+  char *ruta_absoluta = NULL;
+  int retorno;
+  int fichero_a_mandar_df;
 
-  int   bytes_mandados      =  0;
-  int   tamanio_fichero     =  0;
-  int   cabecera_length     =  0;
-  int   path_len            =  0;
-  int   fichero_a_mandar_df = -1;
-  int   retorno             =  ERROR;
-  char *cabecera_respuesta  = NULL;
-  char *ruta_absoluta       = NULL;
-
-  /* Guarda la ruta relativa del fichero pedido */
-  if (strcmp(ruta_fichero, "/") == 0) {
-    /* Responder html básico */
-    free(ruta_fichero);
-    path_len = strlen(INDEX_BASICO);
-    ruta_fichero = (char *)malloc((path_len + 1) * sizeof(char));
-    strcpy(ruta_fichero, INDEX_BASICO);
-  }
-
-  /* if (ruta_fichero[0] == '/') { */
-    /* Eliminar el / del principio de la cadena */
-    /*char *nueva_ruta_fichero = (char *)malloc(strlen(ruta_fichero) * sizeof(char));
-    strcpy(nueva_ruta_fichero, ruta_fichero + 1);
-
-    free(ruta_fichero);
-    ruta_fichero = nueva_ruta_fichero;
-  }*/
-
-  ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
+  /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
   if (ruta_absoluta == NULL) {
     /* TODO */
   }
 
-  if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
     /* TODO */
   }
 
+  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+  if (fichero_a_mandar_df < 0) {
+    /* TODO */
+  }
+
+  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_NOT_FOUND_CODE, RESPONSE_NOT_FOUND_FRASE, ruta_absoluta, fichero_a_mandar_df);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  free(ruta_absoluta);
+
+  return OK;
+
+}
+
+int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_absoluta, int fichero_a_mandar_df) {
+
+  char *cabecera_respuesta = NULL;
+  int bytes_mandados;
+  int cabecera_length = 0;
+  int retorno;
+  int tamanio_fichero;
+
+  /* Reserva memoria para la cabecera de la respuesta */
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
     /* TODO */
   }
-
-
-  /* Abre el fichero pedido */
-  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
-
 
   /* Forma la cabecera */
 
@@ -634,49 +851,16 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
     /* TODO */
   }
 
-  if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
+  /* 1.2 Escribe el codigo de respuesta */
+  retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, codigo);
+  if (retorno != OK) {
+    /* TODO */
+  }
 
-    /* 1.2 Escribe el codigo de respuesta */
-    retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_NOT_FOUND_CODE);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    /* 1.3 Escribe la frase de respuesta */
-    retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_NOT_FOUND_FRASE);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
-    free(ruta_absoluta);
-    ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
-    if (ruta_absoluta == NULL) {
-      /* TODO */
-    }
-
-    if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
-      /* TODO */
-    }
-
-    fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
-    if (fichero_a_mandar_df < 0) {
-      /* TODO */
-    }
-
-  } else {
-
-    /* 1.2 Escribe el codigo de respuesta */
-    retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    /* 1.3 Escribe la frase de respuesta */
-    retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_FRASE);
-    if (retorno != OK) {
-      /* TODO */
-    }
+  /* 1.3 Escribe la frase de respuesta */
+  retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, frase);
+  if (retorno != OK) {
+    /* TODO */
   }
 
   /* 2. Escribe los campos de cabecera */
@@ -699,13 +883,10 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
     /* TODO */
   }
 
-  if (fichero_a_mandar_df >= 0) { /* Se ha pedido un archivo que existe */
-
-    /* 2.4. Escribe la hora de ultima modificacion del fichero */
-    retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_absoluta);
-    if (retorno != OK) {
-      /* TODO */
-    }
+  /* 2.4. Escribe la hora de ultima modificacion del fichero */
+  retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_absoluta);
+  if (retorno != OK) {
+    /* TODO */
   }
 
   /* 2.5 Termina la cabecera */
@@ -715,9 +896,10 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
   }
 
 
-  /* TODO 3. Manda la cabecera */
+  /* 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
     /* TODO */
+    perror("Error en el send");
   }
 
   /* 4. Manda el archivo */
@@ -730,17 +912,117 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
     printf("Archivo mandado (%d bytes)\n", bytes_mandados);
   }
 
-  /* DEBUG */
-  printf("----------------------\n");
-
 
   if (fichero_a_mandar_df > 0) {
     close(fichero_a_mandar_df);
   }
 
-  free(ruta_fichero);
-  free(ruta_absoluta);
   free(cabecera_respuesta);
 
   return OK;
+
+}
+
+
+
+
+int _fichero_es_script(char *ruta) {
+
+  char *punto         = NULL;
+  char *interrogacion = NULL;
+  char *ruta_auxiliar = NULL;
+  int flag;
+
+  if (ruta == NULL) {
+    return FALSE;
+  }
+
+  ruta_auxiliar = (char *)malloc((strlen(ruta) + 1) * sizeof(char));
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+  strcpy(ruta_auxiliar, ruta);
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+
+  punto = strrchr(ruta_auxiliar, '.');
+
+  if (punto == NULL || punto == ruta_auxiliar) {
+    free(ruta_auxiliar);
+    return FALSE;
+  }
+
+  interrogacion = strrchr(ruta_auxiliar, '?');
+
+  if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
+    free(ruta_auxiliar);
+    return FALSE;
+  } else {
+    interrogacion[0] = '\0';
+  }
+
+  if (strcmp(punto, EXTENSION_PYTHON) == 0) {
+    flag = TRUE;
+  } else if (strcmp(punto, EXTENSION_PHP) == 0) {
+    flag = TRUE;
+  } else {
+    flag = FALSE;
+  }
+
+  free(ruta_auxiliar);
+
+  return flag;
+}
+
+int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p) {
+
+  /* TODO */
+
+  char *interrogacion = NULL;
+  char *ruta_auxiliar = NULL;
+  char *variables_aux = NULL;
+
+  ruta_auxiliar = (char *)malloc((strlen(ruta_absoluta) + 1) * sizeof(char));
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+  strcpy(ruta_auxiliar, ruta_absoluta);
+  if (ruta_auxiliar == NULL) {
+    /* TODO */
+  }
+
+
+  interrogacion = strrchr(ruta_auxiliar, '?');
+
+  if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
+    return ERROR;
+  } else {
+    interrogacion[0] = '\0';
+
+    variables_aux = interrogacion + 1;
+
+    *ruta_script_p = (char *)malloc((strlen(ruta_auxiliar) + 1) * sizeof(char));
+    if (*ruta_script_p == NULL) {
+      /* TODO */
+    }
+    strcpy(*ruta_script_p, ruta_auxiliar);
+    if (*ruta_script_p == NULL) {
+      /* TODO */
+    }
+
+    *variables_p = (char *)malloc((strlen(variables_aux) + 1) * sizeof(char));
+    if (*variables_p == NULL) {
+      /* TODO */
+    }
+    strcpy(*variables_p, variables_aux);
+    if (*variables_p == NULL) {
+      /* TODO */
+    }
+
+
+    free(ruta_auxiliar);
+
+    return OK;
+  }
 }
