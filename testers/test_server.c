@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 
@@ -61,7 +62,9 @@ int main() {
   }
   close_connection(socketfd);
 
-  return 0;
+  wait(NULL);
+
+  exit(EXIT_SUCCESS);
 }
 
 void cierre_usuario(int senal) {
@@ -79,6 +82,8 @@ void cierre_usuario(int senal) {
       perror("\nError al cerrar el socket");
     }
   }
+
+  wait(NULL);
 
   exit(EXIT_SUCCESS);
 }

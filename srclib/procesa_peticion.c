@@ -75,6 +75,10 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 
 int _responder_bad_request (int connfd);
 
+int _responder_404 (int connfd, char *resources_path);
+
+int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_fichero, int fichero_a_mandar_df);
+
 int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd);
 
 int _fichero_es_script(char *ruta);
@@ -123,16 +127,16 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
   rret          = campos_parseados.rret;
 
   /* DEBUG PRINTEAR LA REQUEST PARA DEBUGGEAR */
-  printf("request is %d bytes long\n", pret);
+  /* printf("request is %d bytes long\n", pret);
   printf("method is %.*s\n", (int)method_len, method);
   printf("path is %.*s\n", (int)path_len, path);
-  /*printf("path is %d bytes long\n", (int)path_len);
+  printf("path is %d bytes long\n", (int)path_len);
   printf("path is %d long\n", (int)path_len);
-  printf("HTTP version is 1.%d\n", minor_version);*/
+  printf("HTTP version is 1.%d\n", minor_version);
   printf("headers (%d):\n", (int)num_headers);
   for (i = 0; i != num_headers; ++i) {
     printf("%.*s: %.*s\n", (int)headers[i].name_len, headers[i].name, (int)headers[i].value_len, headers[i].value);
-  }
+  } */
 
   /* Comprobaciones de argumentos */
   if (resources_path == NULL) {
@@ -169,11 +173,25 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
   } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
 
+    retorno = _responder_bad_request(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+
   } else if (strcmp(verbo_peticion, "OPTIONS") == 0) { /* Petición POST */
 
+    retorno = _responder_bad_request(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+
   } else {
+
     /* TODO Verbo no soportado */
     retorno = _responder_bad_request(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
   }
 
   free(verbo_peticion);
@@ -194,9 +212,6 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
   campos_a_parsear->buflen = 0;
   campos_a_parsear->prevbuflen = 0;
 
-  /* DEBUG */printf("Ha entrado en parsear\n");
-
-
   while (1) {
     /* read the request */
     while ((campos_a_parsear->rret = read(connfd, campos_a_parsear->buf + campos_a_parsear->buflen, sizeof(campos_a_parsear->buf) - campos_a_parsear->buflen)) == -1
@@ -208,10 +223,10 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
 
     /* DEBUG *//*printf("Ha salido del bucle de read (%d bytes)\n", (int)campos_a_parsear->rret);*/
 
-    if (errno == EINTR) {
-      /* DEBUG */printf("Ha recibido el timeout\n");
+    /*if (errno == EINTR) {
+      *//* DEBUG *//*printf("Ha recibido el timeout\n");
       return CLOSE_CONNECTION_REQUEST;
-    }
+    }*/
 
     if (campos_a_parsear->rret < 0) {
       return IOERROR;
@@ -248,6 +263,78 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
     if (campos_a_parsear->buflen == sizeof(campos_a_parsear->buf)) {
       return REQUESTISTOOLONGERROR;
     }
+  }
+
+  return OK;
+}
+
+int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
+
+  int   bytes_mandados      =  0;
+  int   tamanio_fichero     =  0;
+  int   cabecera_length     =  0;
+  int   path_len            =  0;
+  int   fichero_a_mandar_df = -1;
+  int   retorno             =  ERROR;
+  char *cabecera_respuesta  = NULL;
+  char *ruta_absoluta       = NULL;
+
+  /* Guarda la ruta relativa del fichero pedido */
+  if (strcmp(ruta_fichero, "/") == 0) {
+    /* Responder html básico */
+    free(ruta_fichero);
+    path_len = strlen(INDEX_BASICO);
+    ruta_fichero = (char *)malloc((path_len + 1) * sizeof(char));
+    strcpy(ruta_fichero, INDEX_BASICO);
+  }
+
+  ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
+  if (ruta_absoluta == NULL) {
+    /* TODO */
+  }
+
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
+    /* TODO */
+  }
+
+  /* TODO Peticion GET a un script */
+  if (_fichero_es_script(ruta_absoluta) == TRUE) {
+    /* TODO retorno = ejecutar_script(connfd, ruta_absoluta); */
+    /* if (retorno != OK) { */
+      /* TODO */
+    /* } */
+
+    /* DEBUG */
+    _responder_bad_request(connfd);
+
+  } else { /* Se ha solicitado un fichero */
+
+    /* Abre el fichero pedido */
+    fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+
+    if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
+
+      retorno = _responder_404(connfd, resources_path);
+      if (retorno != OK) {
+        /* TODO */
+      }
+
+    } else { /* El fichero pedido si que existe */
+
+      retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_absoluta, fichero_a_mandar_df);
+      if (retorno != OK) {
+        /* TODO */
+      }
+
+    }
+
+    /* DEBUG */
+    printf("----------------------\n");
+
+    free(ruta_absoluta);
+    free(ruta_fichero);
+
+    return OK;
   }
 
   return OK;
@@ -327,7 +414,6 @@ int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length
   if (linea_tipo == NULL) {
     /* TODO */
   }
-
 
   tipo_fichero = (char *)calloc(1, MAX_TIPO_FICHERO * sizeof(char));
   if (tipo_fichero == NULL) {
@@ -517,8 +603,9 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 int _responder_bad_request (int connfd) {
 
   char *cabecera_respuesta;
-  int cabecera_length = 0;
-  int retorno;
+  int   cabecera_length = 0;
+  int   tamanio_fichero;
+  int   retorno;
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
@@ -552,7 +639,7 @@ int _responder_bad_request (int connfd) {
   }
 
   /* 2.2 Escribe el tamaño de fichero */
-  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, NULL);
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
   if (retorno != OK) {
     /* TODO */
   }
@@ -578,193 +665,133 @@ int _responder_bad_request (int connfd) {
   return OK;
 }
 
+int _responder_404(int connfd, char *resources_path) {
 
-int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
+  char *ruta_absoluta = NULL;
+  int retorno;
+  int fichero_a_mandar_df;
 
-  int   bytes_mandados      =  0;
-  int   tamanio_fichero     =  0;
-  int   cabecera_length     =  0;
-  int   path_len            =  0;
-  int   fichero_a_mandar_df = -1;
-  int   retorno             =  ERROR;
-  char *cabecera_respuesta  = NULL;
-  char *ruta_absoluta       = NULL;
-
-  /* Guarda la ruta relativa del fichero pedido */
-  if (strcmp(ruta_fichero, "/") == 0) {
-    /* Responder html básico */
-    free(ruta_fichero);
-    path_len = strlen(INDEX_BASICO);
-    ruta_fichero = (char *)malloc((path_len + 1) * sizeof(char));
-    strcpy(ruta_fichero, INDEX_BASICO);
-  }
-
-  /* if (ruta_fichero[0] == '/') { */
-    /* Eliminar el / del principio de la cadena */
-    /*char *nueva_ruta_fichero = (char *)malloc(strlen(ruta_fichero) * sizeof(char));
-    strcpy(nueva_ruta_fichero, ruta_fichero + 1);
-
-    free(ruta_fichero);
-    ruta_fichero = nueva_ruta_fichero;
-  }*/
-
-  ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
+  /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
   if (ruta_absoluta == NULL) {
     /* TODO */
   }
 
-  if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
     /* TODO */
   }
 
-  /* TODO Peticion GET a un script */
-  if (_fichero_es_script(ruta_absoluta) == TRUE) {
-    /* TODO retorno = ejecutar_script(connfd, ruta_absoluta); */
-    /* if (retorno != OK) { */
-      /* TODO */
-    /* } */
-
-    free(ruta_fichero);
-    free(ruta_absoluta);
-
-    /* DEBUG */
-    printf("----------------------\n");
-
-
-    return OK;
-
-    } else { /* Se ha solicitado un fichero */
-
-
-    cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
-    if (cabecera_respuesta == NULL) {
-      /* TODO */
-    }
-
-
-    /* Abre el fichero pedido */
-    fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
-
-
-    /* Forma la cabecera */
-
-    /* 1.1 Escribe la version */
-    retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
-
-      /* 1.2 Escribe el codigo de respuesta */
-      retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_NOT_FOUND_CODE);
-      if (retorno != OK) {
-        /* TODO */
-      }
-
-      /* 1.3 Escribe la frase de respuesta */
-      retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_NOT_FOUND_FRASE);
-      if (retorno != OK) {
-        /* TODO */
-      }
-
-      /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
-      free(ruta_absoluta);
-      ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
-      if (ruta_absoluta == NULL) {
-        /* TODO */
-      }
-
-      if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
-        /* TODO */
-      }
-
-      fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
-      if (fichero_a_mandar_df < 0) {
-        /* TODO */
-      }
-
-    } else {
-
-      /* 1.2 Escribe el codigo de respuesta */
-      retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
-      if (retorno != OK) {
-        /* TODO */
-      }
-
-      /* 1.3 Escribe la frase de respuesta */
-      retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_FRASE);
-      if (retorno != OK) {
-        /* TODO */
-      }
-    }
-
-    /* 2. Escribe los campos de cabecera */
-
-    /* 2.1 Escribe el tipo de fichero */
-    retorno = _cabecera_anadir_tipo_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    /* 2.2 Escribe el tamaño de fichero */
-    retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta, &tamanio_fichero);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    /* 2.3. Escribe la fecha y hora actuales */
-    retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-    if (fichero_a_mandar_df >= 0) { /* Se ha pedido un archivo que existe */
-
-      /* 2.4. Escribe la hora de ultima modificacion del fichero */
-      retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_absoluta);
-      if (retorno != OK) {
-        /* TODO */
-      }
-    }
-
-    /* 2.5 Termina la cabecera */
-    retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
-    if (retorno != OK) {
-      /* TODO */
-    }
-
-
-    /* TODO 3. Manda la cabecera */
-    if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
-      /* TODO */
-    }
-
-    /* 4. Manda el archivo */
-    retorno = _mandar_fichero_chunks(connfd, fichero_a_mandar_df, tamanio_fichero, TAMANIO_CHUNK, &bytes_mandados);
-
-    if (bytes_mandados < 0) {
-      /* TODO */
-    } else {
-      /* DEBUG */
-      printf("Archivo mandado (%d bytes)\n", bytes_mandados);
-    }
-
-
-    if (fichero_a_mandar_df > 0) {
-      close(fichero_a_mandar_df);
-    }
-
-    free(ruta_fichero);
-    free(ruta_absoluta);
-    free(cabecera_respuesta);
-
-    /* DEBUG */
-    printf("----------------------\n");
-
-    return OK;
+  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+  if (fichero_a_mandar_df < 0) {
+    /* TODO */
   }
+
+  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_NOT_FOUND_CODE, RESPONSE_NOT_FOUND_FRASE, ruta_absoluta, fichero_a_mandar_df);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+
 }
+
+int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_absoluta, int fichero_a_mandar_df) {
+
+  char *cabecera_respuesta = NULL;
+  int bytes_mandados;
+  int cabecera_length = 0;
+  int retorno;
+  int tamanio_fichero;
+
+  /* Reserva memoria para la cabecera de la respuesta */
+
+  cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
+  if (cabecera_respuesta == NULL) {
+    /* TODO */
+  }
+
+  /* Forma la cabecera */
+
+  /* 1.1 Escribe la version */
+  retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.2 Escribe el codigo de respuesta */
+  retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, codigo);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 1.3 Escribe la frase de respuesta */
+  retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, frase);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2. Escribe los campos de cabecera */
+
+  /* 2.1 Escribe el tipo de fichero */
+  retorno = _cabecera_anadir_tipo_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.2 Escribe el tamaño de fichero */
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, ruta_absoluta, &tamanio_fichero);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.3. Escribe la fecha y hora actuales */
+  retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.4. Escribe la hora de ultima modificacion del fichero */
+  retorno = _cabecera_anadir_ultima_modificacion(cabecera_respuesta, &cabecera_length, ruta_absoluta);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  /* 2.5 Termina la cabecera */
+  retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+
+  /* 3. Manda la cabecera */
+  if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
+    /* TODO */
+    perror("Error en el send");
+  }
+
+  /* 4. Manda el archivo */
+  retorno = _mandar_fichero_chunks(connfd, fichero_a_mandar_df, tamanio_fichero, TAMANIO_CHUNK, &bytes_mandados);
+
+  if (bytes_mandados < 0) {
+    /* TODO */
+  } else {
+    /* DEBUG */
+    printf("Archivo mandado (%d bytes)\n", bytes_mandados);
+  }
+
+
+  if (fichero_a_mandar_df > 0) {
+    close(fichero_a_mandar_df);
+  }
+
+  free(cabecera_respuesta);
+
+  return OK;
+
+}
+
+
+
 
 int _fichero_es_script(char *ruta) {
 
