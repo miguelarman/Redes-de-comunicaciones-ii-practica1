@@ -5,103 +5,122 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="www/style.css">
+        <!-- <link rel="icon" type="image/x-icon" href="media/media/favicon.ico"> -->
         <script type="text/javascript">
             var timerStart = Date.now();
         </script>
     </head>
+
     <body>
-        <p>Imagenes JPEG:</p>
-        Ligera:<img src="media/img_small.jpeg" alt="error" height="50">
-        Pesada:<img src="media/img_big.jpeg" alt="error" height="50">
 
-        <p>Secuencia de 10 fotos JPG:</p>
-        1<img src="media/img1.jpg" alt="error" height="25">
-        2<img src="media/img2.jpg" alt="error" height="25">
-        3<img src="media/img3.jpg" alt="error" height="25">
-        4<img src="media/img4.jpg" alt="error" height="25">
-        5<img src="media/img5.jpg" alt="error" height="25">
-        6<img src="media/img6.jpg" alt="error" height="25">
-        7<img src="media/img7.jpg" alt="error" height="25">
-        8<img src="media/img8.jpg" alt="error" height="25">
-        9<img src="media/img9.jpg" alt="error" height="25">
-        10<img src="media/img10.jpg" alt="error" height="25">
+      <h1>Página de prueba del servidor</h1>
 
-        <p>Animacion GIF:</p>
-        <img src="media/animacion.gif" alt="error">
+      <p>Imagenes JPEG:</p>
+      Ligera:<img src="media/img_small.jpeg" alt="error" height="50">
+      Pesada:<img src="media/img_big.jpeg" alt="error" height="50">
 
-        <p></p>
-        No existente: <a href="kjhdsfkjhdk.html">enlace</a>
+      <p>Secuencia de 10 fotos JPG:</p>
+      1<img src="media/img1.jpg" alt="error" height="25">
+      2<img src="media/img2.jpg" alt="error" height="25">
+      3<img src="media/img3.jpg" alt="error" height="25">
+      4<img src="media/img4.jpg" alt="error" height="25">
+      5<img src="media/img5.jpg" alt="error" height="25">
+      6<img src="media/img6.jpg" alt="error" height="25">
+      7<img src="media/img7.jpg" alt="error" height="25">
+      8<img src="media/img8.jpg" alt="error" height="25">
+      9<img src="media/img9.jpg" alt="error" height="25">
+      10<img src="media/img10.jpg" alt="error" height="25">
 
-        <p></p>
-        Nota importante: <a href="IMPORTANTE.txt">enlace</a>
+      <p>Animacion GIF:</p>
+      <img src="media/animacion.gif" alt="error">
 
-        <p></p>
-        Vídeo largo de 2GB: <a href="media/video.mpeg">enlace</a>
+      <hr>
+      <h3>Enlaces y ficheros</h3>
 
-        <p></p>
-        Texto .txt: <a href="media/texto.txt">enlace</a>
+      <ul>
+        <li>No existente: <a href="kjhdsfkjhdk.html">enlace</a></li>
+        <li>Nota importante: <a href="IMPORTANTE.txt">enlace</a></li>
+        <!-- <li>Vídeo mpeg: <a href="media/video.mpeg">enlace</a></li> -->
+        <li>Vídeo largo mp4: <a href="media/video.mp4">enlace</a></li>
+        <li>Texto .txt: <a href="media/texto.txt">enlace</a></li>
+        <li>Ejemplo .pdf: <a href="media/lorem_ipsum.pdf">enlace</a></li>
+        <li>Ejemplo .docx: <a href="media/file.docx">enlace</a></li>
+        <li>Ejemplo vídeo mp4: <a href="media/video.mp4">enlace</a></li>
+      </ul>
 
-        <p></p>
-        Ejemplo .pdf: <a href="media/lorem_ipsum.pdf">enlace</a>
+      <hr>
+      <h3>Otros ficheros:</h3>
 
-        <p></p>
-        Ejemplo .docx: <a href="media/file.docx">enlace</a>
+      <p></p>
+      Audio:
+      <audio controls>
+        <source src="media/audio.wav" type="audio/ogg">
+        Your browser does not support the audio element.
+      </audio>
 
-        <p>Scripts:</p>
+      <p></p>
+      Vídeo de Youtube:
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/fJ9rUzIMcZQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-        <table>
-            <tr>
-                <td>
-                    <form action="scripts/test.py" method="get">
-                      <input type="hidden" name="variableGET" value="hola mundo GET">
-                      <input type="submit" value="GET .py">
-                    </form>
-                </td>
-                <td>
-                    <form action="scripts/test.py" method="post">
-                      <input type="hidden" name="variablePOST" value="hola mundo POST">
-                      <input type="submit" value="POST .py">
-                    </form>
-                </td>
-                <td>
-                    <form action="scripts/test.py?variableGET=hola+mundo+GET" method="post">
-                      <input type="hidden" name="variablePOST" value="hola mundo POST">
-                      <input type="submit" value="GET/POST .py">
-                    </form>
-                </td>
-            </tr>
-        </table>
+      <p></p>
+      <span style="color:red">Añadir más ficheros: audio, vídeo de youtube, etc</span>
 
-        <table>
-            <tr>
-                <td>
-                    <form action="scripts/test.php" method="get">
-                      <input type="hidden" name="variableGET" value="hola mundo GET">
-                      <input type="submit" value="GET .php">
-                    </form>
-                </td>
-                <td>
-                    <form action="scripts/test.php" method="post">
-                      <input type="hidden" name="variablePOST" value="hola mundo POST">
-                      <input type="submit" value="POST .php">
-                    </form>
-                </td>
-                <td>
-                    <form action="scripts/test.php?variableGET=hola+mundo+GET" method="post">
-                      <input type="hidden" name="variablePOST" value="hola mundo POST">
-                      <input type="submit" value="GET/POST .php">
-                    </form>
-                </td>
-            </tr>
-        </table>
+      <p>Scripts:</p>
 
-        <p></p>
-        <span id="texto_timing" style="font-size: 26px;">Cargando...</span>
+      <table>
+          <tr>
+              <td>
+                  <form action="scripts/test.py" method="get">
+                    <input type="hidden" name="variableGET" value="hola mundo GET">
+                    <input type="submit" value="GET .py">
+                  </form>
+              </td>
+              <td>
+                  <form action="scripts/test.py" method="post">
+                    <input type="hidden" name="variablePOST" value="hola mundo POST">
+                    <input type="submit" value="POST .py">
+                  </form>
+              </td>
+              <td>
+                  <form action="scripts/test.py?variableGET=hola+mundo+GET" method="post">
+                    <input type="hidden" name="variablePOST" value="hola mundo POST">
+                    <input type="submit" value="GET/POST .py">
+                  </form>
+              </td>
+          </tr>
+      </table>
 
-        <script type="text/javascript">
-            window.onload = function () {
-                document.getElementById("texto_timing").textContent="La página cargó en: "+(Date.now()-timerStart)+"ms";
-            }
-        </script>
-    </body>
+    <table>
+        <tr>
+            <td>
+                <form action="scripts/test.php" method="get">
+                  <input type="hidden" name="variableGET" value="hola mundo GET">
+                  <input type="submit" value="GET .php">
+                </form>
+            </td>
+            <td>
+                <form action="scripts/test.php" method="post">
+                  <input type="hidden" name="variablePOST" value="hola mundo POST">
+                  <input type="submit" value="POST .php">
+                </form>
+            </td>
+            <td>
+                <form action="scripts/test.php?variableGET=hola+mundo+GET" method="post">
+                  <input type="hidden" name="variablePOST" value="hola mundo POST">
+                  <input type="submit" value="GET/POST .php">
+                </form>
+            </td>
+        </tr>
+    </table>
+
+    <p></p>
+    <span id="texto_timing" style="font-size: 26px;">Cargando...</span>
+
+    <script type="text/javascript">
+      window.onload = function () {
+        document.getElementById("texto_timing").textContent="La página cargó en: "+(Date.now()-timerStart)+"ms";
+      }
+    </script>
+  </body>
 </html>
