@@ -20,6 +20,8 @@ int main () {
 
   r = demonizar();
 
+  syslog(LOG_INFO, "En el tester");
+
   printf("Returned: %d", r);
   if (r == 0) {
     printf("\tCorrect execution (check syslog)\n");

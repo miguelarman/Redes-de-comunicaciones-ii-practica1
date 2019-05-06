@@ -24,6 +24,7 @@ int demonizar(void) {
   /* Abrir el log del sistema para su uso posterior */
   setlogmask(LOG_UPTO(LOG_INFO));
   openlog("Server system messages:", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL3);
+  syslog(LOG_INFO, "----------------------------------");
   syslog(LOG_INFO, "Initiating new daemon.");
 
   /* Crear una nueva sesión de tal forma que el proceso pase a ser el líder de sesión */
@@ -57,11 +58,16 @@ int demonizar(void) {
 
   for (i = 0; i < max_fd; i++) {
     if (close(i) < 0) {
+      /*
       syslog(LOG_ERR, "Error closing file descriptor %d. It is not open", i);
+      */
+    } else {
+      syslog(LOG_INFO, "Succesfully closed file descriptor %d.", i);
     }
   }
   syslog(LOG_INFO, "Closed file descriptors");
 
+  syslog(LOG_INFO, "Ended demon function successfully");
 
   return OK;
 }
