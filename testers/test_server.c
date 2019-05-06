@@ -27,6 +27,7 @@ int main() {
 
   struct sockaddr_in client_addr;
   int addrlen;
+  int i;
 
   addrlen = sizeof(client_addr);
 
@@ -45,7 +46,6 @@ int main() {
   }
   strcat(cwd, "/resources");
 
-  int i;
   for (i = 0; i < 3; i++) {
     fork();
   }

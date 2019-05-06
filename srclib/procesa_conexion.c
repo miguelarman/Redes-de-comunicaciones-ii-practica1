@@ -43,7 +43,6 @@ int procesa_conexion(int connfd, char *resources_path) {
       }
 
       if (retorno == CLOSE_CONNECTION_REQUEST) {
-        /* DEBUG */printf("El ccliente ha solicitado salir\n");
         break;
       }
 

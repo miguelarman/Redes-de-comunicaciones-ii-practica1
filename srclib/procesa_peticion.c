@@ -16,20 +16,27 @@
 
 #define TAMANIO_CHUNK 1024
 
-#define INDEX_BASICO "/www/index.html"
-#define PAGINA_404   "/www/404.html"
+#define INDEX_BASICO                 "/www/index.html"
+#define PAGINA_BAD_REQUEST           "/www/400.html"
+#define PAGINA_NOT_FOUND             "/www/404.html"
+#define PAGINA_SERVER_ERROR          "/www/500.html"
+#define PAGINA_SERVICE_UNAVAILABLE   "/www/503.html"
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
 
 #define ALLOW_LISTA "OPTIONS, GET, POST"
 
-#define RESPONSE_OK_CODE          200
-#define RESPONSE_BAD_REQUEST_CODE 400
-#define RESPONSE_NOT_FOUND_CODE   404
+#define RESPONSE_OK_CODE                  200
+#define RESPONSE_BAD_REQUEST_CODE         400
+#define RESPONSE_NOT_FOUND_CODE           404
+#define RESPONSE_SERVER_ERROR_CODE        500
+#define RESPONSE_SERVICE_UNAVAILABLE_CODE 503
 
-#define RESPONSE_OK_FRASE          "OK"
-#define RESPONSE_BAD_REQUEST_FRASE "Bad Request"
-#define RESPONSE_NOT_FOUND_FRASE   "Not Found"
+#define RESPONSE_OK_FRASE                    "OK"
+#define RESPONSE_BAD_REQUEST_FRASE           "Bad Request"
+#define RESPONSE_NOT_FOUND_FRASE             "Not Found"
+#define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"
+#define RESPONSE_SERVICE_UNAVAILABLE_FRASE   "Service Unavailable"
 
 #define HTML_TYPE  "text/html"
 #define JPG_TYPE   "image/jpeg"
@@ -91,9 +98,19 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
 
 int _responder_bad_request (int connfd, char* resources_path);
 
-int _responder_404 (int connfd, char *resources_path);
+int _responder_bad_request_sin_ficheros (int connfd);
 
-int _responder_404_sin_ficheros (int connfd);
+int _responder_service_unavailable (int connfd, char* resources_path);
+
+int _responder_service_unavailable_sin_ficheros (int connfd);
+
+int _responder_server_error (int connfd, char* resources_path);
+
+int _responder_server_error_sin_ficheros (int connfd);
+
+int _responder_not_found (int connfd, char *resources_path);
+
+int _responder_not_found_sin_ficheros (int connfd);
 
 int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_fichero, int fichero_a_mandar_df);
 
@@ -139,7 +156,9 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
 
   /* Guardo los valores guardados por parsear_peticion en la estructura */
-  /*buf           = campos_parseados.buf;*/
+  /*
+  buf           = campos_parseados.buf;
+  */
   method        = campos_parseados.method;
   path          = campos_parseados.path;
   /*
@@ -201,7 +220,8 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
       /* TODO */
     }
 
-  } else if (strcmp(verbo_peticion, "OPTIONS") == 0) { /* Petición OPTIONS */
+  } else if (strcmp(verbo_peticion, "OPTIONS") == 0) {
+    /* Petición OPTIONS */
 
     retorno = funcionalidad_options(connfd, resources_path);
     if (retorno != OK) {
@@ -210,14 +230,13 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
   } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
 
-    retorno = _responder_bad_request(connfd, resources_path);
+    retorno = _responder_service_unavailable(connfd, resources_path);
     if (retorno != OK) {
       /* TODO */
     }
 
   } else {
-
-    /* TODO Verbo no soportado */
+    /* Verbo no soportado */
     retorno = _responder_bad_request(connfd, resources_path);
     if (retorno != OK) {
       /* TODO */
@@ -337,7 +356,7 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd) {
 
     if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
 
-      retorno = _responder_404(connfd, resources_path);
+      retorno = _responder_not_found(connfd, resources_path);
       if (retorno != OK) {
         /* TODO */
       }
@@ -634,9 +653,7 @@ int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_len
   }
 
   if (ruta_fichero == NULL) {
-    if (tamanio_fichero != NULL) {
       *tamanio_fichero = 0;
-    }
   } else {
     if (stat(ruta_fichero, &statbuf) < 0) {
       /* TODO */
@@ -760,19 +777,25 @@ int _responder_bad_request (int connfd, char* resources_path) {
   int retorno;
   int fichero_a_mandar_df;
 
-  /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
-  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
+  /* Actualiza los valores con la página de error para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_BAD_REQUEST) + 1) * sizeof(char));
   if (ruta_absoluta == NULL) {
     /* TODO */
   }
 
-  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_BAD_REQUEST) < 0) {
     /* TODO */
   }
 
   fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
   if (fichero_a_mandar_df < 0) {
-    /* TODO */
+    printf("No se ha encontrado la página para el error 400\n");
+    retorno = _responder_bad_request_sin_ficheros(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+    free(ruta_absoluta);
+    return OK;
   }
 
   retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_BAD_REQUEST_CODE, RESPONSE_BAD_REQUEST_FRASE, ruta_absoluta, fichero_a_mandar_df);
@@ -780,34 +803,154 @@ int _responder_bad_request (int connfd, char* resources_path) {
     /* TODO */
   }
 
+  close(fichero_a_mandar_df);
   free(ruta_absoluta);
 
   return OK;
 }
 
-int _responder_404(int connfd, char *resources_path) {
+int _responder_bad_request_sin_ficheros(int connfd) {
+
+  int retorno;
+
+  retorno = _manda_respuesta_sin_fichero(connfd, RESPONSE_BAD_REQUEST_CODE, RESPONSE_BAD_REQUEST_FRASE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+
+}
+
+int _responder_service_unavailable (int connfd, char* resources_path) {
 
   char *ruta_absoluta = NULL;
   int retorno;
   int fichero_a_mandar_df;
 
-  /* Actualiza los valores con la página de 404 para los siguientes valores de la cabecera */
-  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_404) + 1) * sizeof(char));
+  /* Actualiza los valores con la página de error para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_SERVICE_UNAVAILABLE) + 1) * sizeof(char));
   if (ruta_absoluta == NULL) {
     /* TODO */
   }
 
-  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_404) < 0) {
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_SERVICE_UNAVAILABLE) < 0) {
     /* TODO */
   }
 
   fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
   if (fichero_a_mandar_df < 0) {
-    /* No se encuentra la página 404 */
-    retorno = _responder_404_sin_ficheros(connfd);
+    printf("No se ha encontrado la página para el error 503\n");
+    retorno = _responder_service_unavailable_sin_ficheros(connfd);
     if (retorno != OK) {
       /* TODO */
     }
+    free(ruta_absoluta);
+    return OK;
+  }
+
+  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_SERVICE_UNAVAILABLE_CODE, RESPONSE_SERVICE_UNAVAILABLE_FRASE, ruta_absoluta, fichero_a_mandar_df);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  close(fichero_a_mandar_df);
+
+  free(ruta_absoluta);
+
+  return OK;
+}
+
+int _responder_service_unavailable_sin_ficheros(int connfd) {
+
+  int retorno;
+
+  retorno = _manda_respuesta_sin_fichero(connfd, RESPONSE_SERVICE_UNAVAILABLE_CODE, RESPONSE_SERVICE_UNAVAILABLE_FRASE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+
+}
+
+int _responder_server_error (int connfd, char* resources_path) {
+
+  char *ruta_absoluta = NULL;
+  int retorno;
+  int fichero_a_mandar_df;
+
+  /* Actualiza los valores con la página de server error para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_SERVER_ERROR) + 1) * sizeof(char));
+  if (ruta_absoluta == NULL) {
+    /* TODO */
+  }
+
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_SERVER_ERROR) < 0) {
+    /* TODO */
+  }
+
+  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+  if (fichero_a_mandar_df < 0) {
+    printf("No se ha encontrado la página para el error 500\n");
+    retorno = _responder_server_error_sin_ficheros(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+    free(ruta_absoluta);
+    return OK;
+  }
+
+  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_SERVER_ERROR_CODE, RESPONSE_SERVER_ERROR_FRASE, ruta_absoluta, fichero_a_mandar_df);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  close(fichero_a_mandar_df);
+  free(ruta_absoluta);
+
+  return OK;
+}
+
+int _responder_server_error_sin_ficheros(int connfd) {
+
+  int retorno;
+
+  retorno = _manda_respuesta_sin_fichero(connfd, RESPONSE_SERVER_ERROR_CODE, RESPONSE_SERVER_ERROR_FRASE);
+  if (retorno != OK) {
+    /* TODO */
+  }
+
+  return OK;
+
+}
+
+int _responder_not_found(int connfd, char *resources_path) {
+
+  char *ruta_absoluta = NULL;
+  int retorno;
+  int fichero_a_mandar_df;
+
+  /* Actualiza los valores con la página de error para los siguientes valores de la cabecera */
+  ruta_absoluta = (char *)malloc((strlen(resources_path) + strlen(PAGINA_NOT_FOUND) + 1) * sizeof(char));
+  if (ruta_absoluta == NULL) {
+    /* TODO */
+  }
+
+  if (sprintf(ruta_absoluta, "%s%s", resources_path, PAGINA_NOT_FOUND) < 0) {
+    /* TODO */
+  }
+
+  fichero_a_mandar_df = open(ruta_absoluta, O_RDONLY);
+  if (fichero_a_mandar_df < 0) {
+    /* No se encuentra la página de error */
+    printf("No se ha encontrado la página para el error 404\n");
+    retorno = _responder_not_found_sin_ficheros(connfd);
+    if (retorno != OK) {
+      /* TODO */
+    }
+    free(ruta_absoluta);
+    return OK;
   }
 
   retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_NOT_FOUND_CODE, RESPONSE_NOT_FOUND_FRASE, ruta_absoluta, fichero_a_mandar_df);
@@ -821,7 +964,7 @@ int _responder_404(int connfd, char *resources_path) {
 
 }
 
-int _responder_404_sin_ficheros(int connfd) {
+int _responder_not_found_sin_ficheros(int connfd) {
 
   int retorno;
 
@@ -933,6 +1076,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
 
   char *cabecera_respuesta = NULL;
   int cabecera_length = 0;
+  int tamanio_fichero;
   int retorno;
 
   /* Reserva memoria para la cabecera de la respuesta */
@@ -941,6 +1085,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   if (cabecera_respuesta == NULL) {
     /* TODO */
   }
+
 
   /* Forma la cabecera */
 
@@ -974,7 +1119,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   */
 
   /* 2.2 Escribe el tamaño de fichero */
-  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, NULL);
+  retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
   if (retorno != OK) {
     /* TODO */
   }
