@@ -7,13 +7,14 @@
 ########################################################
 CC = gcc
 CFLAGS = -g -Wall -ansi -pedantic
-FILES = tester_daemon test_server
+FILES = tester_daemon test_server #server
 TESTERS = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
-OBJECTSTEST_SERVER = srclib/connection.o srclib/procesa_peticion.o srclib/procesa_conexion.o srclib/picohttpparser.o testers/test_server.o
+OBJECTSTEST_SERVER = srclib/connection.o srclib/daemon.o srclib/procesa_peticion.o srclib/procesa_conexion.o srclib/picohttpparser.o testers/test_server.o
+OBJECTSSERVER = srclib/blockingQueue.o srclib/connection.o srclib/procesa_conexion.o srclib/procesa_peticion.o srclib/configParser.o src/server.o
 ########################################################
-OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o srclib/picohttpparser.o testers/test_server.o srclib/procesa_peticion.o srclib/procesa_conexion.o
+OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o srclib/picohttpparser.o testers/test_server.o srclib/procesa_peticion.o srclib/procesa_conexion.o #src/server.o
 ########################################################
 
 all: $(FILES) clear
@@ -35,10 +36,34 @@ test_server: $(OBJECTSTEST_SERVER)
 test_server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h testers/test_server.c
 	$(CC) $(CFLAGS) -c testers/test_server.c
 
+server: $(OBJECTSSERVER)
+	$(CC) $(CFLAGS) -o server $(OBJECTSSERVER)
+
+server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h src/server.c
+	$(CC) $(CFLAGS) -c src/server.c
+
+
+
+prueba_script: prueba_script.o
+	$(CC) -g -o prueba_script prueba_script.o
+
+prueba_script.o: prueba_script.c
+	$(CC) -g -c prueba_script.c
+
+prueba: prueba.o
+	$(CC) -g -o prueba prueba.o
+
+prueba.o: prueba.c
+	$(CC) -g -c prueba.c
+
+
 
 
 daemon.o: srclib/daemon.c includes/daemon.h
 	$(CC) $(CFLAGS) -c srclib/daemon.c
+
+# confuse.o: srclib/confuse.c includes/confuse.h
+# 	$(CC) $(CFLAGS) -c srclib/confuse.c
 
 connection.o: srclib/connection.c includes/connection.h
 	$(CC) $(CFLAGS) -c srclib/connection.c
@@ -51,6 +76,9 @@ procesa_conexion.o: srclib/procesa_conexion.c includes/procesa_conexion.h includ
 
 picohttpparser.o: srclib/picohttpparser.c includes/picohttpparser.h
 	$(CC) $(CFLAGS) -c srclib/picohttpparser.c
+
+blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
+	$(CC) $(CFLAGS) -c srclib/blockingQueue.c
 
 ########################################################
 

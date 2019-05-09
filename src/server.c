@@ -1,16 +1,25 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <signal.h>
 
 #include "../includes/blockingQueue.h"
-#include "../includes/servidor_threadpool.h"
+#include "../includes/connection.h"
+#include "../includes/procesa_conexion.h"
+#include "../includes/server.h"
 #include "../includes/configParser.h"
 
+#define SERVER_PORT 9999
+#define SERVER_IP "127.0.0.1"
+
+
 int close_server = 0;
-int listendfd;
+int listenfd;
+char abspath[MAX_STR];
+
 
 void sig_int(int signum) {
   shutdown(listenfd, SHUT_RD);      /* cierra el socket del servidor */
@@ -23,10 +32,9 @@ void sig_int(int signum) {
   la procesen
 */
 
-typedef struct
-{
+typedef struct {
     int clifd;                /* client file descriptor */
-    int poisoned;             /* indica si el paquete esta envenando */
+    int poisoned;             /* indica si el paquete esta envenado */
 } client;
 
 int client_create(client **c_out, int clifd, int poisoned)
@@ -38,7 +46,7 @@ int client_create(client **c_out, int clifd, int poisoned)
   }
 
   c = (client *)malloc(sizeof(client));
-  // falta control
+  /* falta control */
   c->clifd = clifd;
   c->poisoned = poisoned;
   *c_out = c;
@@ -71,8 +79,8 @@ void *thread_main(void *arg) {
       free(c);
       pthread_exit(NULL);
     }
-    process_request(connfd);
-    close(clifd);
+    procesa_conexion(c->clifd, abspath);
+    close(c->clifd);
     free(c);
   }
 }
@@ -86,7 +94,6 @@ int main(int argc, char **argv)
   pthread_t threads[THREAD_COUNT];
   client **c;
   configOptions opts;
-  char abspath[MAX_STR];
 
   /* Se parsean los parametros del fichero de configuracion */
   if (parseConfig("server.conf", &opts) == ERROR) {
@@ -98,19 +105,20 @@ int main(int argc, char **argv)
     return ERROR;
   }
   strcat(abspath, opts.server_root);
-  
+
   /* Se demoniza */
 
   c = (client **)malloc(sizeof(client *));
 
   /* Contiene las llamadas a socket(), bind() y listen() */
-  //listenfd = Tcp_listen(argv[1], argv[2], &addrlen);
+  listenfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
+
   /* Crea la cola bloqueante */
   blockingQueue_create(&queue, QUEUE_SIZE);
   /* Crea los hilos */
   for (i = 0; i < THREAD_COUNT; i++) {
     pthread_create(&threads[i], NULL, thread_main, queue);
-    // falta control
+    /* falta control */
   }
 
   while (1) {

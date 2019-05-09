@@ -1,5 +1,6 @@
 #include "../includes/connection.h"
 #include "../includes/procesa_conexion.h"
+#include "../includes/daemon.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -27,32 +28,44 @@ int main() {
 
   struct sockaddr_in client_addr;
   int addrlen;
-  int i;
+  int i, r;
 
-  addrlen = sizeof(client_addr);
+  /* No hacemos caso a SIGPIPE */
+  signal(SIGPIPE, SIG_IGN);
 
   signal(SIGINT, cierre_usuario);
-
-  socketfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
-  if (socketfd == ERROR_BIND) {
-    /* TODO */
-    printf("Error en tcp_listen\n");
-    exit(-1);
-  }
-  printf("Escuchando en [%s:%d]...\n\n", SERVER_IP, SERVER_PORT);
 
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
     /* TODO */
   }
   strcat(cwd, "/resources");
 
+  
+  r = demonizar();
+  syslog(LOG_DEBUG, "Demonizar ha devuelto %d", r);
+  if (r == ES_PADRE) {
+    exit(EXIT_SUCCESS);
+  }
+
+  socketfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
+  if (socketfd == ERROR_BIND) {
+    /* TODO */
+    syslog(LOG_ERR, "Error en tcp_listen");
+    exit(-1);
+  }
+  syslog(LOG_INFO, "Escuchando en [%s:%d]...", SERVER_IP, SERVER_PORT);
+
+
+
   for (i = 0; i < 3; i++) {
     fork();
   }
 
+  addrlen = sizeof(client_addr);
+
   while (1) {
     connfd = accept_connection(socketfd, (struct sockaddr*)&client_addr, (socklen_t *)&addrlen);
-    printf("Conexión desde [%s:%d]\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+    syslog(LOG_INFO, "Conexión desde [%s:%d]", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
     procesa_conexion(connfd, cwd);
 
@@ -68,6 +81,9 @@ int main() {
 }
 
 void cierre_usuario(int senal) {
+  pid_t wpid;
+  int status = 0;
+
   /* Cierra la conexión y el socket */
   if (connfd >= 0) {
     if (close_connection(connfd) < 0) {
@@ -83,7 +99,8 @@ void cierre_usuario(int senal) {
     }
   }
 
-  wait(NULL);
+  /* Espera a todos los hijos */
+  while ((wpid = wait(&status)) > 0);
 
   exit(EXIT_SUCCESS);
 }

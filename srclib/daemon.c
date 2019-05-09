@@ -18,7 +18,7 @@ int demonizar(void) {
   }
   if (child_pid > 0) {
     /* TODO exit(EXIT_SUCCESS); */
-    return OK; /* Salir del padre */
+    return ES_PADRE; /* Salir del padre */
   }
 
   /* Abrir el log del sistema para su uso posterior */
@@ -26,6 +26,7 @@ int demonizar(void) {
   openlog("Server system messages:", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL3);
   syslog(LOG_INFO, "----------------------------------");
   syslog(LOG_INFO, "Initiating new daemon.");
+
 
   /* Crear una nueva sesión de tal forma que el proceso pase a ser el líder de sesión */
   if (setsid() < 0) {

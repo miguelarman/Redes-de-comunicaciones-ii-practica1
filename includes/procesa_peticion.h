@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +27,8 @@
 
 typedef struct Parsear_ {
   char buf[4096];
+  char *body;
+  int bodylen;
   char *method;
   char *path;
   int pret;

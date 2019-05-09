@@ -2,7 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "confuse.h"
+#include "../includes/confuse.h"
 #include "../includes/configParser.h"
 
 int parseConfig(char *conffile, configOptions *out_confopt) {

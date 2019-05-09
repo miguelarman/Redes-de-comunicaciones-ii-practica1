@@ -26,26 +26,26 @@ int blockingQueue_create(blockingQueue **q_out, int size) {
         return ERROR;
     }
     q = (blockingQueue *)malloc(sizeof(blockingQueue));
-    // falta control
+    /* falta control */
     q->size = size;
     q->count = 0;
     q->head = 0;
     q->tail = 0;
     q->entries = (void **)malloc(sizeof(void *) * size);
-    // falta control
+    /* falta control */
     pthread_mutex_init(&q->lock, NULL);
-    // falta control
+    /* falta control */
     sem_init(&q->filled, 0, 0);
-    // falta control
+    /* falta control */
     sem_init(&q->empty, 0, size);
-    // falta control
+    /* falta control */
     *q_out = q;
     return SUCCESS;
 }
 
-// cuando se llame a esta funcion se tiene que asegurar de que
-// la cola esta vacia y no hay hilos esperando en los semaforos,
-// esto lo hacemos a nivel de threadPool mediante envenenamiento
+/* cuando se llame a esta funcion se tiene que asegurar de que
+ * la cola esta vacia y no hay hilos esperando en los semaforos,
+ * esto lo hacemos a nivel de threadPool mediante envenenamiento */
 int blockingQueue_destroy(blockingQueue *q) {
     if (q == NULL) {
         return ERROR;
@@ -63,12 +63,12 @@ int blockingQueue_get(blockingQueue *q, void **entry_out) {
         return ERROR;
     }
     sem_wait(&q->filled);
-    // inicio de seccion critica
+    /* inicio de seccion critica */
     pthread_mutex_lock(&q->lock);
     *entry_out = q->entries[q->tail++];
     if (q->tail == q->size) q->tail = 0;
     pthread_mutex_unlock(&q->lock);
-    // fin de seccion critica
+    /* fin de seccion critica */
     sem_post(&q->empty);
     return SUCCESS;
 }
@@ -78,12 +78,12 @@ int blockingQueue_put(blockingQueue *q, void *entry) {
         return ERROR;
     }
     sem_wait(&q->empty);
-    // inicio de seccion critica
+    /* inicio de seccion critica */
     pthread_mutex_lock(&q->lock);
     q->entries[q->head++] = entry;
     if (q->head == q->size) q->head = 0;
     pthread_mutex_unlock(&q->lock);
-    // fin de seccion critica
+    /* fin de seccion critica */
     sem_post(&q->filled);
     return SUCCESS;
 }

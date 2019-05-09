@@ -18,7 +18,7 @@ print("Fin de datos")
 
 
 print("\n\nRecibido por ARGV:")
-for line in sys.argv:
+for line in sys.argv[1:]:
     print(line)
 print("Fin de datos")
 

@@ -64,11 +64,93 @@
       <iframe width="560" height="315" src="https://www.youtube.com/embed/fJ9rUzIMcZQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
       <p></p>
-      <span style="color:red">Añadir más ficheros: audio, vídeo de youtube, etc</span>
-
       <p>Scripts:</p>
 
       <table>
+        <!-- Scripts que devuelven todo lo enviado -->
+        <tr>
+          <td>
+            <form action="/www/scripts/recibido.py" method="get" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Get arguments python script">
+            </form>
+          </td>
+          <td>
+            <form action="/www/scripts/recibido.py" method="post" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Post arguments python script">
+            </form>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <form action="/www/scripts/nombreApellido.py" method="get" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Get python script">
+            </form>
+          </td>
+          <td>
+            <form action="/www/scripts/nombreApellido.py" method="post" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Post python script">
+            </form>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <form action="/www/scripts/noExistente.py" method="get" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Get no existente">
+            </form>
+          </td>
+          <td>
+            <form action="/www/scripts/noExistente.py" method="post" target="_blank">
+              Nombre:<br>
+              <input type="text" name="nombre" value="Mickey"><br>
+
+              Apellido:<br>
+              <input type="text" name="apellido" value="Mouse"><br><br>
+
+              <input type="submit" value="Post no existente">
+            </form>
+          </td>
+        </tr>
+        <tr>
+          <td>
+              <form action="www/scripts/recibido.py?variableGET=hola+mundo+GET" method="post" target="_blank">
+                <input type="hidden" name="variablePOST" value="hola mundo POST">
+                <input type="submit" value="GET/POST .py">
+              </form>
+          </td>
+        </tr>
+      </table>
+
+      <!-- <table>
           <tr>
               <td>
                   <form action="scripts/test.py" method="get">
@@ -112,7 +194,7 @@
                 </form>
             </td>
         </tr>
-    </table>
+    </table> -->
 
     <p></p>
     <span id="texto_timing" style="font-size: 26px;">Cargando...</span>

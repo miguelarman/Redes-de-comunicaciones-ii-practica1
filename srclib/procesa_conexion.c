@@ -55,16 +55,6 @@ int procesa_conexion(int connfd, char *resources_path) {
   } else {
     return OK;
   }
-
-
-  /*****************************************************************/
-  retorno = procesa_peticion(connfd, resources_path, campos_parseados);
-  if (retorno != OK) {
-    /* TODO */
-  }
-
-
-  return ERROR;
 }
 
 
