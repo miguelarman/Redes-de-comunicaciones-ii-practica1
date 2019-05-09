@@ -1,7 +1,7 @@
 import sys
 import urllib.parse as urlparse
 
-web_code = '<html><head><p>Bienvenidx <font size=15>{} {}</p></font></head></html>'
+web_code = '<html><head><title>Resultado del script</title></head><body><p>Bienvenidx <font size=15>{} {}</font></p><img src="/media/welcome.gif" alt="Welcome!" width="20%" align="middle"></body></html>'
 
 try:
     for line in sys.stdin:

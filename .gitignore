@@ -3,3 +3,4 @@ resources/favicon.ico
 *.o
 test_server
 tester_daemon
+prueba*

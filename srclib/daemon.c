@@ -23,7 +23,7 @@ int demonizar(void) {
 
   /* Abrir el log del sistema para su uso posterior */
   setlogmask(LOG_UPTO(LOG_INFO));
-  openlog("Server system messages:", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL3);
+  openlog("Servidor:", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL3);
   syslog(LOG_INFO, "----------------------------------");
   syslog(LOG_INFO, "Initiating new daemon.");
 

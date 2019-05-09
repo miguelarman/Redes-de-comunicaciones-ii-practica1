@@ -10,6 +10,7 @@
         <script type="text/javascript">
             var timerStart = Date.now();
         </script>
+        <title>Página principal</title>
     </head>
 
     <body>
@@ -42,7 +43,6 @@
         <li>No existente: <a href="kjhdsfkjhdk.html">enlace</a></li>
         <li>Nota importante: <a href="IMPORTANTE.txt">enlace</a></li>
         <!-- <li>Vídeo mpeg: <a href="media/video.mpeg">enlace</a></li> -->
-        <li>Vídeo largo mp4: <a href="media/video.mp4">enlace</a></li>
         <li>Texto .txt: <a href="media/texto.txt">enlace</a></li>
         <li>Ejemplo .pdf: <a href="media/lorem_ipsum.pdf">enlace</a></li>
         <li>Ejemplo .docx: <a href="media/file.docx">enlace</a></li>
@@ -61,7 +61,7 @@
 
       <p></p>
       Vídeo de Youtube:
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/fJ9rUzIMcZQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <iframe width="280" height="156" src="https://www.youtube.com/embed/fJ9rUzIMcZQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
       <p></p>
       <p>Scripts:</p>
@@ -69,6 +69,7 @@
       <table>
         <!-- Scripts que devuelven todo lo enviado -->
         <tr>
+          <td><p>Scripts que imprimen los argumentos que reciben:</p></td>
           <td>
             <form action="/www/scripts/recibido.py" method="get" target="_blank">
               Nombre:<br>
@@ -93,6 +94,7 @@
           </td>
         </tr>
         <tr>
+          <td><p>Scripts que leen argumentos de una form:</p></td>
           <td>
             <form action="/www/scripts/nombreApellido.py" method="get" target="_blank">
               Nombre:<br>
@@ -117,6 +119,7 @@
           </td>
         </tr>
         <tr>
+          <td><p>Scripts que no existen:</p></td>
           <td>
             <form action="/www/scripts/noExistente.py" method="get" target="_blank">
               Nombre:<br>
@@ -141,6 +144,7 @@
           </td>
         </tr>
         <tr>
+          <td><p>Scripts que recibe argumentos tanto en la url como en el body de la petición:</p></td>
           <td>
               <form action="www/scripts/recibido.py?variableGET=hola+mundo+GET" method="post" target="_blank">
                 <input type="hidden" name="variablePOST" value="hola mundo POST">

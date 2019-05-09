@@ -9,6 +9,7 @@
 #include "../includes/blockingQueue.h"
 #include "../includes/connection.h"
 #include "../includes/procesa_conexion.h"
+#include "../includes/daemon.h"
 #include "../includes/server.h"
 #include "../includes/configParser.h"
 
@@ -88,6 +89,7 @@ void *thread_main(void *arg) {
 int main(int argc, char **argv)
 {
   int i, connfd;
+  int r;
   socklen_t addrlen, clilen;
   struct sockaddr *cliaddr;
   blockingQueue *queue;
@@ -106,7 +108,12 @@ int main(int argc, char **argv)
   }
   strcat(abspath, opts.server_root);
 
-  /* Se demoniza */
+  /* Demonizamos el proceso, por lo que se quedan ejecutando */
+  r = demonizar();
+  if (r == ES_PADRE) {
+    exit(EXIT_SUCCESS);
+  }
+
 
   c = (client **)malloc(sizeof(client *));
 

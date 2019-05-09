@@ -12,9 +12,9 @@ TESTERS = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
 OBJECTSTEST_SERVER = srclib/connection.o srclib/daemon.o srclib/procesa_peticion.o srclib/procesa_conexion.o srclib/picohttpparser.o testers/test_server.o
-OBJECTSSERVER = srclib/blockingQueue.o srclib/connection.o srclib/procesa_conexion.o srclib/procesa_peticion.o srclib/configParser.o src/server.o
+OBJECTSSERVER = srclib/blockingQueue.o srclib/connection.o srclib/daemon.o srclib/procesa_conexion.o srclib/procesa_peticion.o srclib/configParser.o srclib/picohttpparser.o src/server.o
 ########################################################
-OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/connection.o srclib/picohttpparser.o testers/test_server.o srclib/procesa_peticion.o srclib/procesa_conexion.o #src/server.o
+OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/blockingQueue.o srclib/connection.o srclib/picohttpparser.o srclib/procesa_peticion.o srclib/procesa_conexion.o #src/server.o
 ########################################################
 
 all: $(FILES) clear
@@ -33,13 +33,13 @@ tester_daemon.o: includes/daemon.h testers/tester_daemon.c
 test_server: $(OBJECTSTEST_SERVER)
 	$(CC) $(CFLAGS) -o test_server $(OBJECTSTEST_SERVER)
 
-test_server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h testers/test_server.c
+test_server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h testers/test_server.c
 	$(CC) $(CFLAGS) -c testers/test_server.c
 
 server: $(OBJECTSSERVER)
 	$(CC) $(CFLAGS) -o server $(OBJECTSSERVER)
 
-server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h src/server.c
+server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h includes/picohttpparser.h src/server.c
 	$(CC) $(CFLAGS) -c src/server.c
 
 

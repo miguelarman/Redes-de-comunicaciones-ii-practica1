@@ -14,7 +14,6 @@
 
 #define SERVER_PORT 9999
 #define SERVER_IP "127.0.0.1"
-/*#define SERVER_IP "192.168.1.39"*/ /* Direccion en la red local para probar desde otro dispositivo */
 
 void cierre_usuario(int senal);
 
@@ -40,9 +39,11 @@ int main() {
   }
   strcat(cwd, "/resources");
 
-  
+  /* Damos intrucciones para ver la página web */
+  printf("Proceso creado y demonizado. Para acceder a la página accede a %s:%d\n", SERVER_IP, SERVER_PORT);
+
+  /* Demonizamos el proceso, por lo que se quedan ejecutando */
   r = demonizar();
-  syslog(LOG_DEBUG, "Demonizar ha devuelto %d", r);
   if (r == ES_PADRE) {
     exit(EXIT_SUCCESS);
   }

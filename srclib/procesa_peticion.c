@@ -211,7 +211,7 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
     return PETICION_INVALIDA;
   }
 
-  syslog(LOG_INFO, "Recibida petición (%d) %.*s. Path: %.*s", (int)method_len, (int)method_len, method, (int)path_len, path);
+  syslog(LOG_INFO, "Recibida petición %.*s. Path: %.*s", (int)method_len, method, (int)path_len, path);
 
   /* Comprobaciones de argumentos */
   if (resources_path == NULL) {
@@ -524,7 +524,8 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
   FILE *pf = NULL;
   char *ruta_script = NULL;
   char *variables_get = NULL;
-  char *ruta_fichero_retorno_aux = "resultados.html";
+  char  ruta_fichero_retorno[2048];
+  char  ruta_fichero_retorno_aux[] = "/resultados.html";
   char  resultado_script[MAX_RESULTADO];
   int   retorno;
   int   fichero_a_mandar_df;
@@ -536,8 +537,10 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
     /* TODO */
   }
 
+  syslog(LOG_INFO, "Script %s con %s", ruta_script, variables_get);
 
-  /* TODO Ejecutar script pasando las peticiones y mandar respuesta */
+
+  /* Ejecutar script pasando las peticiones y mandar respuesta */
   ret = invoca_script(ruta_script, resources_path, variables_get, bodylen, body, resultado_script);
   if (ret != OK) {
     if (ret == SCRIPT_NO_EXISTE) {
@@ -547,18 +550,23 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
     /* TODO */
   }
 
-  pf = fopen(ruta_fichero_retorno_aux, "w");
+
+  /* Guardamos la respuesta en un fichero para mandarlo */
+  strcpy(ruta_fichero_retorno, resources_path);
+  strcat(ruta_fichero_retorno, ruta_fichero_retorno_aux);
+
+  pf = fopen(ruta_fichero_retorno, "w");
   /* fprintf(pf, "<html><body><h1>Recibido:</h1><pre>%s</pre></body></html>", resultado_script); */
   fprintf(pf, "%s", resultado_script);
   fclose(pf);
 
   /* Responde con el fichero creado */
-  fichero_a_mandar_df = open(ruta_fichero_retorno_aux, O_RDONLY);
-  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_fichero_retorno_aux, fichero_a_mandar_df);
+  fichero_a_mandar_df = open(ruta_fichero_retorno, O_RDONLY);
+  retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_fichero_retorno, fichero_a_mandar_df);
   close(fichero_a_mandar_df);
 
   /* Elimina el fichero creado */
-  remove(ruta_fichero_retorno_aux);
+  remove(ruta_fichero_retorno);
 
   /* TODO frees */
   free(ruta_script);
@@ -572,7 +580,8 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
     char comando[2048];
     FILE* pipe;
     FILE* fp;
-    char fichero_args_aux[4096] = "fichero_aux.txt";
+    char fichero_args_aux[4096];
+    char fichero_aux[] = "/fichero_aux.txt";
     /*
     int i;
     */
@@ -605,9 +614,11 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
     strcat(comando, ruta_script);
 
     /* Abrimos un fichero auxiliar en el que escribir los argumentos */
+    strcpy(fichero_args_aux, resources_path);
+    strcat(fichero_args_aux, fichero_aux);
     fp = fopen(fichero_args_aux, "w");
     if (fp == NULL) {
-      /*syslog(LOG_DEBUG, "Couldn't open file: %s. Are you sure you are running this with super user rights??", name);*/
+      syslog(LOG_DEBUG, "No se ha podido crear el fichero %s", fichero_args_aux);
       return ERROR;
     }
 
@@ -645,7 +656,7 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
     fclose(fp);
 
     /* Ejecuta el script mediante una pipe */
-    /*syslog(LOG_DEBUG, "Going to run comando: %s", comando);*/
+    syslog(LOG_INFO, "Ejecutando: %s", comando);
 
     pipe = popen(comando, "r");
     if (pipe == NULL) {
