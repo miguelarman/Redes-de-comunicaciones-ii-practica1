@@ -56,9 +56,6 @@ prueba: prueba.o
 prueba.o: prueba.c
 	$(CC) -g -c prueba.c
 
-
-
-
 daemon.o: srclib/daemon.c includes/daemon.h
 	$(CC) $(CFLAGS) -c srclib/daemon.c
 
@@ -80,6 +77,12 @@ picohttpparser.o: srclib/picohttpparser.c includes/picohttpparser.h
 blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
 	$(CC) $(CFLAGS) -c srclib/blockingQueue.c
 
+########################################################
+doxyfile:
+	doxygen -g
+
+doxygen:
+	doxygen Doxyfile
 ########################################################
 
 clear:

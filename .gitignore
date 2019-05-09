@@ -4,3 +4,6 @@ resources/favicon.ico
 test_server
 tester_daemon
 prueba*
+html/*
+latex/*
+Doxyfile
