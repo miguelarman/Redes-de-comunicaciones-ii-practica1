@@ -8,11 +8,13 @@
 #define TRUE 1
 #define FALSE 0
 
-/* TODO Valores a revisar */
+/* TODO Valores a revisar y añadir más */
 #define MAX_FECHA        512
 #define MAX_TIPO_FICHERO 32
 #define MAX_CABECERA     10000
 #define MAX_LINEA        512
+#define MAX_COMANDO      512
+#define MAX_PATH         1024
 #define MAX_RESULTADO    4096
 
 #define TAMANIO_CHUNK 1024
@@ -39,6 +41,22 @@
 #define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"
 #define RESPONSE_SERVICE_UNAVAILABLE_FRASE   "Service Unavailable"
 
+
+#define EXTENSION_HTML   ".html"
+#define EXTENSION_JPG    ".jpg"
+#define EXTENSION_JPEG   ".jpeg"
+#define EXTENSION_ICO    ".ico"
+#define EXTENSION_GIF    ".gif"
+#define EXTENSION_TXT    ".txt"
+#define EXTENSION_MPEG   ".mpeg"
+#define EXTENSION_MP4    ".mp4"
+#define EXTENSION_PDF    ".pdf"
+#define EXTENSION_DOC    ".doc"
+#define EXTENSION_DOCX   ".docx"
+#define EXTENSION_WAV    ".wav"
+#define EXTENSION_PYTHON ".py"
+#define EXTENSION_PHP    ".php"
+
 #define HTML_TYPE  "text/html"
 #define JPG_TYPE   "image/jpeg"
 #define JPEG_TYPE  "image/jpeg"
@@ -60,22 +78,14 @@
 #define SCRIPT_NO_EXISTE 20
 #define SCRIPT_NO_SOPORTADO 21
 
+#define RESOURCES_PATH_NULL_ERROR 30
+#define DESCRIPTOR_CONN_INCORRECTO 31
+#define SERVER_ERROR 32
+#define SEND_ERROR 33
+#define PIPE_ERROR 34
+
 #define PETICION_INVALIDA 40
 
-#define EXTENSION_HTML   ".html"
-#define EXTENSION_JPG    ".jpg"
-#define EXTENSION_JPEG   ".jpeg"
-#define EXTENSION_ICO    ".ico"
-#define EXTENSION_GIF    ".gif"
-#define EXTENSION_TXT    ".txt"
-#define EXTENSION_MPEG   ".mpeg"
-#define EXTENSION_MP4    ".mp4"
-#define EXTENSION_PDF    ".pdf"
-#define EXTENSION_DOC    ".doc"
-#define EXTENSION_DOCX   ".docx"
-#define EXTENSION_WAV    ".wav"
-#define EXTENSION_PYTHON ".py"
-#define EXTENSION_PHP    ".php"
 
 
 
@@ -143,69 +153,27 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
   char *verbo_peticion      = NULL;
   char *ruta_fichero        = NULL;
-  char *cabecera_respuesta  = NULL;
-  /*
-  char *buf                 = NULL;
-  */
   char *method              = NULL;
   char *path                = NULL;
   char *body                = NULL;
   int   bodylen;
   int   retorno;
-  /*
-  int   pret;
-  int   minor_version;
-  size_t  buflen;
-  size_t  prevbuflen;
-  */
   size_t  method_len;
   size_t  path_len;
-  /*
-  size_t  num_headers;
-  struct phr_header *headers;
-  ssize_t rret;
-  int i;
-  */
 
 
 
   /* Guardo los valores guardados por parsear_peticion en la estructura */
-  /*
-  buf           = campos_parseados.buf;
-  */
   method        = campos_parseados.method;
   path          = campos_parseados.path;
   body          = campos_parseados.body;
   bodylen       = campos_parseados.bodylen;
-  /*
-  pret          = campos_parseados.pret;
-  minor_version = campos_parseados.minor_version;
-  buflen        = campos_parseados.buflen;
-  prevbuflen    = campos_parseados.prevbuflen;
-  */
   method_len    = campos_parseados.method_len;
   path_len      = campos_parseados.path_len;
-  /*
-  num_headers   = campos_parseados.num_headers;
-  headers       = campos_parseados.headers;
-  rret          = campos_parseados.rret;
-  */
 
-  /* DEBUG PRINTEAR LA REQUEST PARA DEBUGGEAR */
-  /* printf("request is %d bytes long\n", pret);
-  printf("method is %.*s\n", (int)method_len, method);
-  printf("path is %.*s\n", (int)path_len, path);
-  printf("path is %d bytes long\n", (int)path_len);
-  printf("HTTP version is 1.%d\n", minor_version);
-  printf("headers (%d):\n", (int)num_headers);
-  for (i = 0; i != num_headers; ++i) {
-    printf("%.*s: %.*s\n", (int)headers[i].name_len, headers[i].name, (int)headers[i].value_len, headers[i].value);
-  }
-  printf("body: %.*s\n", bodylen, body);
-  */
 
   if (method == NULL) {
-    /* El navegador nos genera estas peticiones */
+    /* El navegador a veces genera peticiones incorrectas */
     syslog(LOG_INFO, "Petición incorrecta (metodo es null)");
     _responder_bad_request(connfd, resources_path);
     return PETICION_INVALIDA;
@@ -215,27 +183,42 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
   /* Comprobaciones de argumentos */
   if (resources_path == NULL) {
-    /* TODO */
+    syslog(LOG_INFO, "Resources_path incorrecta (no puede ser NULL)");
+    return RESOURCES_PATH_NULL_ERROR;
   }
+
   if (connfd < 0) {
-    /* TODO */
+    syslog(LOG_INFO, "Descriptor del socket incorrecto");
+    return DESCRIPTOR_CONN_INCORRECTO;
   }
 
 
   if ((verbo_peticion = (char *)malloc(((int)method_len + 1) * sizeof(char))) == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en malloc");
+    _responder_server_error(connfd, resources_path);
+    return SERVER_ERROR;
   }
   if (sprintf(verbo_peticion, "%.*s", (int)method_len, method) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en sprintf");
+    _responder_server_error(connfd, resources_path);
+    if (verbo_peticion) free(verbo_peticion);
+    return SERVER_ERROR;
   }
 
   /* Guarda la ruta del fichero */
   ruta_fichero = (char *)malloc(((int)path_len + 1) * sizeof(char));
   if (ruta_fichero == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en malloc");
+    _responder_server_error(connfd, resources_path);
+    if (verbo_peticion) free(verbo_peticion);
+    return SERVER_ERROR;
   }
   if (sprintf(ruta_fichero, "%.*s", (int)path_len, path) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en sprintf");
+    _responder_server_error(connfd, resources_path);
+    if (verbo_peticion) free(verbo_peticion);
+    if (ruta_fichero) free(ruta_fichero);
+    return SERVER_ERROR;
   }
 
   if (strcmp(verbo_peticion, "GET") == 0) { /* Petición GET */
@@ -243,44 +226,63 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
 
     retorno = funcionalidad_get(ruta_fichero, resources_path, connfd, bodylen, body);
     if (retorno != OK) {
-      /* TODO */
+      syslog(LOG_ERR, "La funcionalidad GET no ha funcionado correctamente (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      if (verbo_peticion) free(verbo_peticion);
+      if (ruta_fichero) free(ruta_fichero);
+      return SERVER_ERROR;
     }
 
-  } else if (strcmp(verbo_peticion, "OPTIONS") == 0) {
-    /* Petición OPTIONS */
+  } else if (strcmp(verbo_peticion, "OPTIONS") == 0) { /* Petición OPTIONS */
 
     retorno = funcionalidad_options(connfd, resources_path);
     if (retorno != OK) {
-      /* TODO */
+      syslog(LOG_ERR, "La funcionalidad GET no ha funcionado correctamente (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      if (verbo_peticion) free(verbo_peticion);
+      if (ruta_fichero) free(ruta_fichero);
+      return SERVER_ERROR;
     }
 
   } else if (strcmp(verbo_peticion, "POST") == 0) { /* Petición POST */
 
     retorno = funcionalidad_post(ruta_fichero, resources_path, connfd, bodylen, body);
     if (retorno != OK) {
-      /* TODO */
+      syslog(LOG_ERR, "La funcionalidad GET no ha funcionado correctamente (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      if (verbo_peticion) free(verbo_peticion);
+      if (ruta_fichero) free(ruta_fichero);
+      return SERVER_ERROR;
     }
 
-    /*
-    retorno = _responder_service_unavailable(connfd, resources_path);
-    if (retorno != OK) {
-
-    }
-    */
 
   } else {
     /* Verbo no soportado */
     retorno = _responder_bad_request(connfd, resources_path);
     if (retorno != OK) {
-      /* TODO */
+      syslog(LOG_ERR, "La función bad request no ha funcionado correctamente (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      if (verbo_peticion) free(verbo_peticion);
+      if (ruta_fichero) free(ruta_fichero);
+      return SERVER_ERROR;
     }
+
+    /*
+    retorno = _responder_service_unavailable(connfd, resources_path);
+    if (retorno != OK) {
+      syslog(LOG_ERR, "La función bad request no ha funcionado correctamente (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      if (verbo_peticion) free(verbo_peticion);
+      if (ruta_fichero) free(ruta_fichero);
+      return SERVER_ERROR;
+    }
+    */
   }
 
   free(ruta_fichero);
   free(verbo_peticion);
-  free(cabecera_respuesta);
 
-  return ERROR;
+  return OK;
 }
 
 
@@ -301,15 +303,6 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
           && errno == EINTR) {
 
     }
-
-    /* campos_a_parsear->rret = recv(connfd, campos_a_parsear->buf, 4096, 0); */
-
-    /* DEBUG *//*printf("Ha salido del bucle de read (%d bytes)\n", (int)campos_a_parsear->rret);*/
-
-    /*if (errno == EINTR) {
-      *//* DEBUG *//*printf("Ha recibido el timeout\n");
-      return CLOSE_CONNECTION_REQUEST;
-    }*/
 
     if (campos_a_parsear->rret < 0) {
       return IOERROR;
@@ -355,7 +348,6 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
 
 int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd, int bodylen, char *body) {
 
-  int   path_len            =  0;
   int   fichero_a_mandar_df = -1;
   int   retorno             =  ERROR;
   char *ruta_absoluta       = NULL;
@@ -365,31 +357,37 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd, int 
     /* Responder html básico */
     ruta_absoluta = (char *)malloc((strlen(INDEX_BASICO) + strlen(resources_path) + 1) * sizeof(char));
     if (ruta_absoluta == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en malloc");
+      return SERVER_ERROR;
     }
 
     if (sprintf(ruta_absoluta, "%s%s", resources_path, INDEX_BASICO) < 0) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en sprintf");
+      if (ruta_absoluta) free(ruta_absoluta);
+      return SERVER_ERROR;
     }
+
   } else {
     ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
     if (ruta_absoluta == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en malloc");
+      return SERVER_ERROR;
     }
 
     if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en sprintf");
+      if (ruta_absoluta) free(ruta_absoluta);
+      return SERVER_ERROR;
     }
   }
 
 
 
-  /* TODO Peticion GET a un script */
+  /* Peticion GET a un script */
   if (_fichero_es_script(ruta_absoluta) == TRUE) {
-    retorno = ejecutar_script(connfd, resources_path, ruta_absoluta, bodylen, body);
-    if (retorno != OK) {
-      /* TODO */
-    }
+
+    ejecutar_script(connfd, resources_path, ruta_absoluta, bodylen, body);
+    /* No comprobamos retorno pues esta función siempre va a enviar algo */
 
   } else { /* Se ha solicitado un fichero */
 
@@ -398,16 +396,15 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd, int 
 
     if (fichero_a_mandar_df < 0) { /* El fichero pedido no existe */
 
-      retorno = _responder_not_found(connfd, resources_path);
-      if (retorno != OK) {
-        /* TODO */
-      }
+      _responder_not_found(connfd, resources_path);
 
     } else { /* El fichero pedido si que existe */
 
       retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_absoluta, fichero_a_mandar_df);
       if (retorno != OK) {
-        /* TODO */
+        syslog(LOG_ERR, "Error la funcion _manda_respuesta_con_fichero (%d)", retorno);
+        if (ruta_absoluta) free(ruta_absoluta);
+        return SERVER_ERROR;
       }
 
     }
@@ -421,23 +418,23 @@ int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd, int 
 }
 
 int funcionalidad_post(char *ruta_fichero, char *resources_path, int connfd, int bodylen, char *body) {
-  int   retorno;
   char *ruta_absoluta = NULL;
 
 
   ruta_absoluta = (char *)malloc((strlen(ruta_fichero) + strlen(resources_path) + 1) * sizeof(char));
   if (ruta_absoluta == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en malloc");
+    return SERVER_ERROR;
   }
 
   if (sprintf(ruta_absoluta, "%s%s", resources_path, ruta_fichero) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en sprintf");
+    if (ruta_absoluta) free(ruta_absoluta);
+    return SERVER_ERROR;
   }
 
-  retorno = ejecutar_script(connfd, resources_path, ruta_absoluta, bodylen, body);
-  if (retorno != OK) {
-    /* TODO */
-  }
+  ejecutar_script(connfd, resources_path, ruta_absoluta, bodylen, body);
+  /* No comprobamos el retorno pues esta función siempre envía algo */
 
   free(ruta_absoluta);
 
@@ -454,25 +451,32 @@ int funcionalidad_options(int connfd, char* resources_path) {
   /* Reserva memoria para la cabecera de respuesta */
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en calloc");
+    return SERVER_ERROR;
   }
 
   /* 1.1 Escribe la version */
   retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_version_html (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 1.2 Escribe el codigo de respuesta */
   retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_CODE);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_codigo_respuesta (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 1.3 Escribe la frase de respuesta */
   retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, RESPONSE_OK_FRASE);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_frase_respuesta (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 2. Escribe los campos de cabecera */
@@ -480,41 +484,43 @@ int funcionalidad_options(int connfd, char* resources_path) {
   /* 2.1 Escribe el campo Allow */
   retorno = _cabecera_anadir_allow(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_allow (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 2.2 Escribe el tamaño de fichero (0) */
   retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_tamanio_fichero (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 2.3. Escribe la fecha y hora actuales */
   retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_anadir_fecha_y_hora_actual (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* 2.5 Termina la cabecera */
   retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en _cabecera_terminar (%d)", retorno);
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SERVER_ERROR;
   }
 
   /* TODO 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error al mandar la cabecera");
+    if (cabecera_respuesta) free(cabecera_respuesta);
+    return SEND_ERROR;
   }
 
   free(cabecera_respuesta);
-
-
-  /*************************************************/
-
-  retorno = _responder_bad_request(connfd, resources_path);
-  if (retorno != OK) {
-    /* TODO */
-  }
 
   return OK;
 }
@@ -524,7 +530,7 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
   FILE *pf = NULL;
   char *ruta_script = NULL;
   char *variables_get = NULL;
-  char  ruta_fichero_retorno[2048];
+  char  ruta_fichero_retorno[MAX_PATH];
   char  ruta_fichero_retorno_aux[] = "/resultados.html";
   char  resultado_script[MAX_RESULTADO];
   int   retorno;
@@ -534,20 +540,24 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
 
   retorno = get_ruta_script_y_variables(ruta_absoluta, &ruta_script, &variables_get);
   if (retorno != OK) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en la función get_ruta_script_y_variables (%d)", retorno);
+    _responder_server_error(connfd, resources_path);
+    return SERVER_ERROR;
   }
-
-  syslog(LOG_INFO, "Script %s con %s", ruta_script, variables_get);
 
 
   /* Ejecutar script pasando las peticiones y mandar respuesta */
   ret = invoca_script(ruta_script, resources_path, variables_get, bodylen, body, resultado_script);
   if (ret != OK) {
     if (ret == SCRIPT_NO_EXISTE) {
+      syslog(LOG_ERR, "El script solicitado no existe");
       _responder_not_found(connfd, resources_path);
       return OK;
+    } else {
+      syslog(LOG_ERR, "Error en la función invoca_script (%d)", retorno);
+      _responder_server_error(connfd, resources_path);
+      return SERVER_ERROR;
     }
-    /* TODO */
   }
 
 
@@ -556,19 +566,31 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
   strcat(ruta_fichero_retorno, ruta_fichero_retorno_aux);
 
   pf = fopen(ruta_fichero_retorno, "w");
-  /* fprintf(pf, "<html><body><h1>Recibido:</h1><pre>%s</pre></body></html>", resultado_script); */
+  if (pf == NULL) {
+    syslog(LOG_ERR, "Error al crear el fichero de retorno del script");
+    _responder_server_error(connfd, resources_path);
+    return SERVER_ERROR;
+  }
   fprintf(pf, "%s", resultado_script);
   fclose(pf);
 
   /* Responde con el fichero creado */
   fichero_a_mandar_df = open(ruta_fichero_retorno, O_RDONLY);
+  if (fichero_a_mandar_df < 0) {
+    syslog(LOG_ERR, "Error al abrir el fichero de retorno del script");
+    _responder_server_error(connfd, resources_path);
+    return SERVER_ERROR;
+  }
   retorno = _manda_respuesta_con_fichero(connfd, RESPONSE_OK_CODE, RESPONSE_OK_FRASE, ruta_fichero_retorno, fichero_a_mandar_df);
   close(fichero_a_mandar_df);
 
   /* Elimina el fichero creado */
-  remove(ruta_fichero_retorno);
+  if (remove(ruta_fichero_retorno) < 0) {
+    syslog(LOG_INFO, "No se ha podido borrar el fichero %s", ruta_fichero_retorno);
+    _responder_server_error(connfd, resources_path);
+    return SERVER_ERROR;
+  }
 
-  /* TODO frees */
   free(ruta_script);
   free(variables_get);
 
@@ -577,26 +599,28 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
 
 int invoca_script(char* ruta_script, char* resources_path, char* variables_get, int bodylen, char *body, char* resultado) {
     char* extension;
-    char comando[2048];
+    char comando[MAX_COMANDO];
     FILE* pipe;
     FILE* fp;
-    char fichero_args_aux[4096];
+    char fichero_args_aux[MAX_PATH];
     char fichero_aux[] = "/fichero_aux.txt";
-    /*
-    int i;
-    */
     int b_leidos;
     int fp_aux;
 
     /* Lo primero comprobamos si el script pedido existe */
     fp_aux = open(ruta_script, O_RDONLY);
     if (fp_aux < 0) {
+      syslog(LOG_INFO, "Se ha solicitado un script no existente: %s", ruta_script);
       return SCRIPT_NO_EXISTE;
     }
     close(fp_aux);
 
     /* Vemos el tipo de script nos es pedido */
     extension = strrchr(ruta_script, '.');
+    if (extension == NULL) {
+      syslog(LOG_ERR, "Error al leer la extensión del script %s", ruta_script);
+      return SERVER_ERROR;
+    }
 
     /* Solo soportamos scripts .php y .py*/
     if (_tipo_script(ruta_script) == PYTHON) {
@@ -605,6 +629,7 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
       sprintf(comando, "php");
     } else {
       printf("Script no soportado: %s\n", extension);
+      syslog(LOG_INFO, "Se ha solicitado un script no soportado: %s", ruta_script);
       return SCRIPT_NO_SOPORTADO;
     }
 
@@ -618,28 +643,34 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
     strcat(fichero_args_aux, fichero_aux);
     fp = fopen(fichero_args_aux, "w");
     if (fp == NULL) {
-      syslog(LOG_DEBUG, "No se ha podido crear el fichero %s", fichero_args_aux);
-      return ERROR;
+      syslog(LOG_ERR, "No se ha podido crear el fichero %s", fichero_args_aux);
+      return SERVER_ERROR;
     }
 
 
     /* Si hay argumentos por GET los añade */
     if (variables_get != NULL) {
+      syslog(LOG_DEBUG, "Se han introducidos por la url: %s", variables_get);
+
       /* Escribimos en el fichero los argumentos recibidos por url (GET) */
       fprintf(fp, "%s", variables_get);
 
       /* Si hay, añadimos los argumentos por POST*/
       if (bodylen > 0) {
+        syslog(LOG_DEBUG, "Se han introducidos por el body: %.*s", bodylen, body);
+
         /* Argumentos pasados por el body (POST) */
         fprintf(fp, "&%.*s", bodylen, body);
       }
 
-        /* Cerramos el fichero y decimos en el comando que se lea de ahí*/
-        strcat(comando, " < ");
-        strcat(comando,  fichero_args_aux);
+      /* Cerramos el fichero y decimos en el comando que se lea de ahí*/
+      strcat(comando, " < ");
+      strcat(comando,  fichero_args_aux);
 
     } else {
       if (bodylen > 0) {
+        syslog(LOG_DEBUG, "Se han introducidos por el body: %.*s", bodylen, body);
+
         /* Argumentos pasados por el body (POST) */
         fprintf(fp, "%.*s", bodylen, body);
 
@@ -648,6 +679,8 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
         strcat(comando,  fichero_args_aux);
       } else {
         /* No hay argumentos */
+        syslog(LOG_DEBUG, "No se han introducido argumentos para el script");
+
         strcat(comando, " < /dev/null");
       }
     }
@@ -660,8 +693,10 @@ int invoca_script(char* ruta_script, char* resources_path, char* variables_get, 
 
     pipe = popen(comando, "r");
     if (pipe == NULL) {
-      return EXIT_FAILURE;
+      syslog(LOG_ERR, "Error en la pipe con el comando %s", comando);
+      return PIPE_ERROR;
     }
+
     /* Leemos el resultado de la pipe */
     b_leidos = fread(resultado, sizeof(char), MAX_RESULTADO, pipe);
     pclose(pipe);
@@ -755,16 +790,21 @@ int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera
 
   linea_fecha = (char *)calloc(1, MAX_LINEA * sizeof(char));
   if (linea_fecha == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el malloc");
+    return SERVER_ERROR;
   }
 
   *cabecera_length += strftime(linea_fecha, MAX_FECHA, "Date: %a, %d %b %Y %H:%M:%S %Z\r\n", &tm);
   if (linea_fecha == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strftime");
+    if (linea_fecha) free(linea_fecha);
+    return SERVER_ERROR;
   }
   strcat(cabecera_respuesta, linea_fecha);
   if (cabecera_respuesta == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strcat");
+    if (linea_fecha) free(linea_fecha);
+    return SERVER_ERROR;
   }
 
   free(linea_fecha);
@@ -778,26 +818,38 @@ int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length
 
   linea_tipo = (char *)calloc(1, MAX_LINEA * sizeof(char));
   if (linea_tipo == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el malloc");
+    return SERVER_ERROR;
   }
 
   tipo_fichero = (char *)calloc(1, MAX_TIPO_FICHERO * sizeof(char));
   if (tipo_fichero == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el calloc");
+    if (linea_tipo) free(linea_tipo);
+    return SERVER_ERROR;
   }
 
   strcpy(tipo_fichero, _tipo_archivo(ruta_fichero));
   if (tipo_fichero == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strcpy");
+    if (linea_tipo) free(linea_tipo);
+    if (tipo_fichero) free(tipo_fichero);
+    return SERVER_ERROR;
   }
 
   *cabecera_length += sprintf(linea_tipo, "Content-type:%s\r\n", tipo_fichero);
   if (linea_tipo == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el sprintf");
+    if (linea_tipo) free(linea_tipo);
+    if (tipo_fichero) free(tipo_fichero);
+    return SERVER_ERROR;
   }
   strcat(cabecera_respuesta, linea_tipo);
   if (cabecera_respuesta == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strcat");
+    if (linea_tipo) free(linea_tipo);
+    if (tipo_fichero) free(tipo_fichero);
+    return SERVER_ERROR;
   }
 
   free(tipo_fichero);
@@ -814,23 +866,31 @@ int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera
 
   linea_modificado = (char *)calloc(1, MAX_LINEA * sizeof(char));
   if (linea_modificado == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el malloc");
+    return SERVER_ERROR;
   }
 
   if (stat(ruta_fichero, &statbuf) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el stat");
+    if (linea_modificado) free(linea_modificado);
+    return SERVER_ERROR;
   }
 
+  /* TODO esto no está inicializado */
   last_modified.tv_sec = statbuf.st_mtime;
   modificado = gmtime(&(last_modified.tv_sec));
 
   *cabecera_length += strftime(linea_modificado, MAX_FECHA, "Last-modified: %a, %d %b %Y %H:%M:%S %Z\r\n", modificado);
   if (linea_modificado == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strftime");
+    if (linea_modificado) free(linea_modificado);
+    return SERVER_ERROR;
   }
   strcat(cabecera_respuesta, linea_modificado);
   if (cabecera_respuesta == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en el strcat");
+    if (linea_modificado) free(linea_modificado);
+    return SERVER_ERROR;
   }
 
   free(linea_modificado);
@@ -980,7 +1040,8 @@ int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fich
   while (mandados < tamanio_fichero) {
     mandados += sendfile(connfd, fichero_a_mandar_df, offset, tamanio_chunk);
     if (mandados < 0) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en el sendfile");
+      return SEND_ERROR;
     }
   }
 
@@ -1266,7 +1327,6 @@ int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta
   /* 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
     /* TODO */
-    perror("Error en el send");
   }
 
   /* 4. Manda el archivo */
@@ -1417,8 +1477,6 @@ int _fichero_es_script(char *ruta) {
 }
 
 int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p) {
-
-  /* TODO */
 
   char *interrogacion = NULL;
   char *ruta_auxiliar = NULL;
