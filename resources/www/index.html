@@ -63,8 +63,8 @@
       Vídeo de Youtube:
       <iframe width="280" height="156" src="https://www.youtube.com/embed/fJ9rUzIMcZQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-      <p></p>
-      <p>Scripts:</p>
+      <hr>
+      <h3>Scripts:</h3>
 
       <table>
         <!-- Scripts que devuelven todo lo enviado -->
@@ -72,22 +72,28 @@
           <td><p>Scripts que imprimen los argumentos que reciben:</p></td>
           <td>
             <form action="/www/scripts/recibido.py" method="get" target="_blank">
-              Nombre:<br>
-              <input type="text" name="nombre" value="Mickey"><br>
+              Primer argumento:<br>
+              <input type="text" name="arg1" value="Valor 1"><br>
 
-              Apellido:<br>
-              <input type="text" name="apellido" value="Mouse"><br><br>
+              Segundo argumento:<br>
+              <input type="text" name="arg2" value="Valor 2"><br>
+
+              Tercer argumento:<br>
+              <input type="text" name="arg3" value="Valor 3"><br><br>
 
               <input type="submit" value="Get arguments python script">
             </form>
           </td>
           <td>
             <form action="/www/scripts/recibido.py" method="post" target="_blank">
-              Nombre:<br>
-              <input type="text" name="nombre" value="Mickey"><br>
+              Primer argumento:<br>
+              <input type="text" name="arg1" value="Valor 1"><br>
 
-              Apellido:<br>
-              <input type="text" name="apellido" value="Mouse"><br><br>
+              Segundo argumento:<br>
+              <input type="text" name="arg2" value="Valor 2"><br>
+
+              Tercer argumento:<br>
+              <input type="text" name="arg3" value="Valor 3"><br><br>
 
               <input type="submit" value="Post arguments python script">
             </form>
@@ -122,22 +128,22 @@
           <td><p>Scripts que no existen:</p></td>
           <td>
             <form action="/www/scripts/noExistente.py" method="get" target="_blank">
-              Nombre:<br>
-              <input type="text" name="nombre" value="Mickey"><br>
+              Usuario:<br>
+              <input type="text" name="user" value="Tu usuario"><br>
 
-              Apellido:<br>
-              <input type="text" name="apellido" value="Mouse"><br><br>
+              Contraseña:<br>
+              <input type="password" name="pwd" value="Tu contrasena"><br><br>
 
-              <input type="submit" value="Get no existente">
+              <input type="submit" value="Post no existente">
             </form>
           </td>
           <td>
             <form action="/www/scripts/noExistente.py" method="post" target="_blank">
-              Nombre:<br>
-              <input type="text" name="nombre" value="Mickey"><br>
+              Usuario:<br>
+              <input type="text" name="user" value="Tu usuario"><br>
 
-              Apellido:<br>
-              <input type="text" name="apellido" value="Mouse"><br><br>
+              Contraseña:<br>
+              <input type="password" name="pwd" value="Tu contrasena"><br><br>
 
               <input type="submit" value="Post no existente">
             </form>
