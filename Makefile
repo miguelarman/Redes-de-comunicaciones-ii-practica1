@@ -78,11 +78,17 @@ blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
 	$(CC) $(CFLAGS) -c srclib/blockingQueue.c
 
 ########################################################
-doxyfile:
-	doxygen -g
+doxy-file:
+	@echo "Al hacer este paso se sobreescribe el Doxyfile. Es necesario poner RECURSIVE = YES y GENERATE_XML = YES para usar moxygen"
+	# doxygen -g
 
 doxygen:
+	@echo "Generando documentación Doxygen"
 	doxygen Doxyfile
+
+moxygen:
+	moxygen --anchors --groups --output api-%s.md xml/
+	#"Da problemas con los enlaces. Usar la regex \{#(.*?)\} ----> <a name="dolar1"></a>"
 ########################################################
 
 clear:

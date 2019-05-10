@@ -1,15 +1,25 @@
 #define _POSIX_C_SOURCE 199309L
 
 
-#define ERROR -1
-#define OK 0
-#define TRUE 1
-#define FALSE 0
 
-#include "../includes/procesa_peticion.h"
+/**
+ * @brief Librería que procesa cada petición
+ *
+ * En este fichero, se definen las funciones necesarias
+ * para, dada una petición HTTP, generar una respuesta
+ * acorde a lo que se pida. Se incluyen algunos errores HTTP
+ *
+ * @file procesa_peticion.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
+ #include "../includes/procesa_peticion.h"
 
 
-/* TODO Valores a revisar y añadir más */
+
+
+/* Valores útiles de dimensiones */
 #define MAX_FECHA        512
 #define MAX_TIPO_FICHERO 32
 #define MAX_CABECERA     10000
@@ -20,11 +30,12 @@
 
 #define TAMANIO_CHUNK    1024
 
-#define INDEX_BASICO                 "/www/index.html"
-#define PAGINA_BAD_REQUEST           "/www/400.html"
-#define PAGINA_NOT_FOUND             "/www/404.html"
-#define PAGINA_SERVER_ERROR          "/www/500.html"
-#define PAGINA_SERVICE_UNAVAILABLE   "/www/503.html"
+/* Paths de páginas de errores */
+#define INDEX_BASICO               "/www/index.html"
+#define PAGINA_BAD_REQUEST         "/www/400.html"
+#define PAGINA_NOT_FOUND           "/www/404.html"
+#define PAGINA_SERVER_ERROR        "/www/500.html"
+#define PAGINA_SERVICE_UNAVAILABLE "/www/503.html"
 
 #define HTTP_RESPONSE_VERSION "HTTP/1.1"
 
@@ -42,10 +53,11 @@
 #define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"
 #define RESPONSE_SERVICE_UNAVAILABLE_FRASE   "Service Unavailable"
 
-#define FICHERO_AUX_PATH "/fichero_aux.txt"
+/* Ficheros auxiliares */
+#define FICHERO_AUX_PATH     "/fichero_aux.txt"
 #define RUTA_FICHERO_RETORNO "/resultados.html"
 
-
+/* Extensiones de ficheros */
 #define EXTENSION_HTML   ".html"
 #define EXTENSION_JPG    ".jpg"
 #define EXTENSION_JPEG   ".jpeg"
@@ -61,6 +73,7 @@
 #define EXTENSION_PYTHON ".py"
 #define EXTENSION_PHP    ".php"
 
+/* Valores del campo content-type */
 #define HTML_TYPE  "text/html"
 #define JPG_TYPE   "image/jpeg"
 #define JPEG_TYPE  "image/jpeg"
@@ -95,65 +108,332 @@
 
 
 
-
-int funcionalidad_get(char *ruta_fichero, char *resources_path, int connfd, int bodylen, char *body);
-
-int funcionalidad_post(char *ruta_fichero, char *resources_path, int connfd, int bodylen, char *body);
-
-int funcionalidad_options(int connfd, char *resources_path);
-
+/**
+ * @brief Función auxiliar que analiza el tipo de fichero por su extensión
+ *
+ * Esta función analiza el tipo del fichero
+ *
+ * @ingroup Procesa_peticion
+ * @param ruta Ruta del fichero
+ * @return Tipo del archivo
+ */
 char * _tipo_archivo(char *ruta);
 
+/**
+ * @brief Función auxiliar que analiza el tipo de script por su extensión
+ *
+ * Esta función analiza el tipo del script
+ *
+ * @param ruta Ruta del script
+ * @return Tipo del archivo
+ */
 int _tipo_script(char *ruta);
 
-int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int bodylen, char *body);
 
-int invoca_script(char* ruta_script, char* resources_path, char* variables_get, int bodylen, char *body, char* resultado);
 
-int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera_length);
+/**
+ * @brief Función que ejecuta un script
+ *
+ * Esta función ejecuta un script en la terminal y devuelve la salida
+ *
+ * @ingroup Procesa_peticion
+ * @param ruta_script Ruta del script
+ * @param resources_path Ruta raíz de la carpeta resources/
+ * @param variables_get Variables explicitadas en la url de la petición
+ * @param bodylen Tamaño del body de la petición
+ * @param body Cuerpo de la petición
+ * @param resultado Resultado de la ejecución del script (salida)
+ * @return Código de ejecución
+ */
+int _invoca_script(char* ruta_script, char* resources_path, char* variables_get, int bodylen, char *body, char* resultado);
 
-int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
-
-int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
-
-int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length);
-
-int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero);
-
-int _cabecera_terminar(char *cabecera_respuesta, int *cabecera_length);
-
-int _cabecera_anadir_version_html(char *cabecera_respuesta, int *cabecera_length);
-
-int _cabecera_anadir_codigo_respuesta(char *cabecera_respuesta, int *cabecera_length, int codigo);
-
-int _cabecera_anadir_frase_respuesta(char *cabecera_respuesta, int *cabecera_length, char *frase);
-
-int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fichero, int tamanio_chunk, int *bytes_mandados);
-
-int _responder_bad_request (int connfd, char* resources_path);
-
-int _responder_bad_request_sin_ficheros (int connfd);
-
-int _responder_service_unavailable (int connfd, char* resources_path);
-
-int _responder_service_unavailable_sin_ficheros (int connfd);
-
-int _responder_server_error (int connfd, char* resources_path);
-
-int _responder_server_error_sin_ficheros (int connfd);
-
-int _responder_not_found (int connfd, char *resources_path);
-
-int _responder_not_found_sin_ficheros (int connfd);
-
-int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta_fichero, int fichero_a_mandar_df);
-
-int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase);
-
+/**
+ * @brief Función que comprueba si un fichero es un script
+ *
+ * Esta función comprueba la extensión de un fichero
+ * para ver si es un script
+ *
+ * @ingroup Procesa_peticion
+ * @param ruta Ruta del script
+ * @return Valor booleano
+ */
 int _fichero_es_script(char *ruta);
 
-int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p);
+/**
+ * @brief Función que separa fichero y argumentos
+ *
+ * Esta función, de una url con parámetros, separa la ruta del
+ * fichero y los argumentos a pasar al mismo
+ *
+ * @ingroup Procesa_peticion
+ * @param ruta Ruta del script
+ * @return Valor booleano
+ */
+int _get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p);
 
+/****************************************************/
+/* Funciones que escriben cada campo de la cabecera */
+/****************************************************/
+
+/**
+ * @brief Función que escribe la hora actual
+ *
+ * Esta función calcula la hora actual, y lo añade a
+ * la cabecera de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera_length);
+
+/**
+ * @brief Función que escribe el tipo de fichero
+ *
+ * Esta función calcula el tipo de fichero, y lo añade a
+ * la cabecera de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
+
+/**
+ * @brief Función que escribe la última modificación de un fichero
+ *
+ * Esta función calcula la última modificación de un
+ * fichero, y lo añade a la cabecera de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @param ruta_fichero Ruta del fichero
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
+
+/**
+ * @brief Función que escribe la lista de comandos permitidos
+ *
+ * Esta función forma la línea de Allow, y
+ * lo añade a la cabecera de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_allow(char *cabecera_respuesta, int *cabecera_length);
+
+/**
+ * @brief Función que escribe el tamaño de un fichero
+ *
+ * Esta función calcula el tamaño de un fichero, y
+ * lo añade a la cabecera de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @param ruta_fichero Ruta del fichero
+ * @param tamanio_fichero Variable donde se guarda el tamaño del fichero
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_tamanio_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero, int *tamanio_fichero);
+
+/**
+ * @brief Función que termina una cabecera
+ *
+ * Esta función añade a la cabecera de una respuesta
+ * la separación entre la cabecera y el cuerpo
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @return Código de ejecución
+ */
+int _cabecera_terminar(char *cabecera_respuesta, int *cabecera_length);
+
+/**
+ * @brief Función que escribe la versión HTML
+ *
+ * Esta función escribe en la cabecera de
+ * respuesta la versión HTTP de la respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_version_html(char *cabecera_respuesta, int *cabecera_length);
+
+/**
+ * @brief Función que escribe el código de respuesta
+ *
+ * Esta función escribe en la cabecera de
+ * respuesta el código de respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @param codigo Código de respuesta
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_codigo_respuesta(char *cabecera_respuesta, int *cabecera_length, int codigo);
+
+/**
+ * @brief Función que escribe la frase de respuesta
+ *
+ * Esta función escribe en la cabecera de
+ * respuesta la frase de respuesta
+ *
+ * @ingroup Procesa_peticion
+ * @param cabecera_respuesta Cabecera de la respuesta
+ * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @param frase Frase de respuesta
+ * @return Código de ejecución
+ */
+int _cabecera_anadir_frase_respuesta(char *cabecera_respuesta, int *cabecera_length, char *frase);
+
+/* Funciones de red */
+
+/**
+ * @brief Función que envía un fichero en chunks
+ *
+ * Esta función envía a un socket un fichero por
+ * chunks de un tamaño fijo
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param fichero_a_mandar_df Descriptor del fichero a mandar
+ * @param tamanio_fichero Tamaño total del fichero
+ * @param tamanio_chunk Tamaño de cada chunk a enviar
+ * @param bytes_mandados Salida de bytes mandados
+ * @return Código de ejecución
+ */
+int _mandar_fichero_chunks(int connfd, int fichero_a_mandar_df, int tamanio_fichero, int tamanio_chunk, int *bytes_mandados);
+
+
+
+/* Funciones de retorno de error */
+
+/**
+ * @brief Función que responde un Bad Request
+ *
+ * Esta función responde con una respuesta
+ * Bad Request a la petición anterior
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_bad_request (int connfd, char* resources_path);
+
+/**
+ * @brief Función que responde un Bad Request sin enviar fichero
+ *
+ * Esta función responde con una respuesta Bad Request
+ * a la petición anterior sin enviar ningún fichero adicional
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_bad_request_sin_ficheros (int connfd);
+
+/**
+ * @brief Función que responde un Service Unavailable
+ *
+ * Esta función responde con una respuesta
+ * Service Unavailable a la petición anterior
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_service_unavailable (int connfd, char* resources_path);
+
+/**
+ * @brief Función que responde un Service Unavailable sin enviar fichero
+ *
+ * Esta función responde con una respuesta Service Unavailable
+ * a la petición anterior sin enviar ningún fichero adicional
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_service_unavailable_sin_ficheros (int connfd);
+
+/**
+ * @brief Función que responde un Server Error
+ *
+ * Esta función responde con una respuesta
+ * Server Error a la petición anterior
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_server_error (int connfd, char* resources_path);
+
+/**
+ * @brief Función que responde un Server Error sin enviar fichero
+ *
+ * Esta función responde con una respuesta Server Error
+ * a la petición anterior sin enviar ningún fichero adicional
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_server_error_sin_ficheros (int connfd);
+
+/**
+ * @brief Función que responde un Not Found
+ *
+ * Esta función responde con una respuesta
+ * Not Found a la petición anterior
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_not_found (int connfd, char *resources_path);
+
+/**
+ * @brief Función que responde un Not Found sin enviar fichero
+ *
+ * Esta función responde con una respuesta Not Found
+ * a la petición anterior sin enviar ningún fichero adicional
+ *
+ * @ingroup Procesa_peticion
+ * @param connfd Descriptor del socket
+ * @param resources_path Ruta de los recursos
+ * @return Código de ejecución
+ */
+int _responder_not_found_sin_ficheros (int connfd);
+
+
+
+
+
+/********************************************/
+/********************************************/
+/********************************************/
+/*       IMPLEMENTACIÓN DE FUNCIONES        */
+/********************************************/
+/********************************************/
+/********************************************/
 
 
 int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados) {
@@ -544,23 +824,23 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
   int   ret;
 
 
-  retorno = get_ruta_script_y_variables(ruta_absoluta, &ruta_script, &variables_get);
+  retorno = _get_ruta_script_y_variables(ruta_absoluta, &ruta_script, &variables_get);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en la función get_ruta_script_y_variables (%d)", retorno);
+    syslog(LOG_ERR, "Error en la función _get_ruta_script_y_variables (%d)", retorno);
     _responder_server_error(connfd, resources_path);
     return SERVER_ERROR;
   }
 
 
   /* Ejecutar script pasando las peticiones y mandar respuesta */
-  ret = invoca_script(ruta_script, resources_path, variables_get, bodylen, body, resultado_script);
+  ret = _invoca_script(ruta_script, resources_path, variables_get, bodylen, body, resultado_script);
   if (ret != OK) {
     if (ret == SCRIPT_NO_EXISTE) {
       syslog(LOG_ERR, "El script solicitado no existe");
       _responder_not_found(connfd, resources_path);
       return OK;
     } else {
-      syslog(LOG_ERR, "Error en la función invoca_script (%d)", retorno);
+      syslog(LOG_ERR, "Error en la función _invoca_script (%d)", retorno);
       _responder_server_error(connfd, resources_path);
       return SERVER_ERROR;
     }
@@ -603,7 +883,7 @@ int ejecutar_script(int connfd, char* resources_path, char *ruta_absoluta, int b
   return OK;
 }
 
-int invoca_script(char* ruta_script, char* resources_path, char* variables_get, int bodylen, char *body, char* resultado) {
+int _invoca_script(char* ruta_script, char* resources_path, char* variables_get, int bodylen, char *body, char* resultado) {
     char* extension;
     char comando[MAX_COMANDO];
     FILE* pipe;
@@ -881,7 +1161,6 @@ int _cabecera_anadir_ultima_modificacion(char *cabecera_respuesta, int *cabecera
     return SERVER_ERROR;
   }
 
-  /* TODO esto no está inicializado */
   last_modified.tv_sec = statbuf.st_mtime;
   modificado = gmtime(&(last_modified.tv_sec));
 
@@ -1128,7 +1407,7 @@ int _responder_bad_request (int connfd, char* resources_path) {
 
 int _responder_bad_request_sin_ficheros(int connfd) {
 
-  _manda_respuesta_sin_fichero(connfd, RESPONSE_BAD_REQUEST_CODE, RESPONSE_BAD_REQUEST_FRASE);
+  manda_respuesta_sin_fichero(connfd, RESPONSE_BAD_REQUEST_CODE, RESPONSE_BAD_REQUEST_FRASE);
 
   return OK;
 }
@@ -1177,7 +1456,7 @@ int _responder_service_unavailable (int connfd, char* resources_path) {
 
 int _responder_service_unavailable_sin_ficheros(int connfd) {
 
-  _manda_respuesta_sin_fichero(connfd, RESPONSE_SERVICE_UNAVAILABLE_CODE, RESPONSE_SERVICE_UNAVAILABLE_FRASE);
+  manda_respuesta_sin_fichero(connfd, RESPONSE_SERVICE_UNAVAILABLE_CODE, RESPONSE_SERVICE_UNAVAILABLE_FRASE);
 
   return OK;
 }
@@ -1225,7 +1504,7 @@ int _responder_server_error (int connfd, char* resources_path) {
 
 int _responder_server_error_sin_ficheros(int connfd) {
 
-  _manda_respuesta_sin_fichero(connfd, RESPONSE_SERVER_ERROR_CODE, RESPONSE_SERVER_ERROR_FRASE);
+  manda_respuesta_sin_fichero(connfd, RESPONSE_SERVER_ERROR_CODE, RESPONSE_SERVER_ERROR_FRASE);
 
   return OK;
 }
@@ -1274,7 +1553,7 @@ int _responder_not_found(int connfd, char *resources_path) {
 
 int _responder_not_found_sin_ficheros(int connfd) {
 
-  _manda_respuesta_sin_fichero(connfd, RESPONSE_NOT_FOUND_CODE, RESPONSE_NOT_FOUND_FRASE);
+  manda_respuesta_sin_fichero(connfd, RESPONSE_NOT_FOUND_CODE, RESPONSE_NOT_FOUND_FRASE);
 
   return OK;
 }
@@ -1393,7 +1672,7 @@ int _manda_respuesta_con_fichero(int connfd, int codigo, char *frase, char *ruta
 
 }
 
-int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
+int manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
 
   char *cabecera_respuesta = NULL;
   int cabecera_length = 0;
@@ -1404,7 +1683,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
 
   cabecera_respuesta = (char *)calloc(1, MAX_CABECERA * sizeof(char));
   if (cabecera_respuesta == NULL) {
-    syslog(LOG_ERR, "Error en calloc en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en calloc en manda_respuesta_sin_fichero");
     return SERVER_ERROR;
   }
 
@@ -1414,7 +1693,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 1.1 Escribe la version */
   retorno = _cabecera_anadir_version_html(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_anadir_version_html en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_anadir_version_html en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1422,7 +1701,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 1.2 Escribe el codigo de respuesta */
   retorno = _cabecera_anadir_codigo_respuesta(cabecera_respuesta, &cabecera_length, codigo);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_anadir_codigo_respuesta en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_anadir_codigo_respuesta en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1430,7 +1709,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 1.3 Escribe la frase de respuesta */
   retorno = _cabecera_anadir_frase_respuesta(cabecera_respuesta, &cabecera_length, frase);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_anadir_frase_respuesta en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_anadir_frase_respuesta en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1443,7 +1722,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 2.2 Escribe el tamaño de fichero */
   retorno = _cabecera_anadir_tamanio_fichero(cabecera_respuesta, &cabecera_length, NULL, &tamanio_fichero);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_anadir_tamanio_fichero en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_anadir_tamanio_fichero en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1451,7 +1730,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 2.3. Escribe la fecha y hora actuales */
   retorno = _cabecera_anadir_fecha_y_hora_actual(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_anadir_fecha_y_hora_actual en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_anadir_fecha_y_hora_actual en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1462,7 +1741,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
   /* 2.5 Termina la cabecera */
   retorno = _cabecera_terminar(cabecera_respuesta, &cabecera_length);
   if (retorno != OK) {
-    syslog(LOG_ERR, "Error en _cabecera_terminar en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en _cabecera_terminar en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1470,7 +1749,7 @@ int _manda_respuesta_sin_fichero(int connfd, int codigo, char *frase) {
 
   /* 3. Manda la cabecera */
   if (send(connfd, cabecera_respuesta, cabecera_length, 0) < 0) {
-    syslog(LOG_ERR, "Error en send en _manda_respuesta_sin_fichero");
+    syslog(LOG_ERR, "Error en send en manda_respuesta_sin_fichero");
     if (cabecera_respuesta) free(cabecera_respuesta);
     return SERVER_ERROR;
   }
@@ -1536,7 +1815,7 @@ int _fichero_es_script(char *ruta) {
   return flag;
 }
 
-int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p) {
+int _get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p) {
 
   char *interrogacion = NULL;
   char *ruta_auxiliar = NULL;
@@ -1544,12 +1823,12 @@ int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char 
 
   ruta_auxiliar = (char *)malloc((strlen(ruta_absoluta) + 1) * sizeof(char));
   if (ruta_auxiliar == NULL) {
-    syslog(LOG_ERR, "Error en malloc en get_ruta_script_y_variables");
+    syslog(LOG_ERR, "Error en malloc en _get_ruta_script_y_variables");
     return SERVER_ERROR;
   }
   strcpy(ruta_auxiliar, ruta_absoluta);
   if (ruta_auxiliar == NULL) {
-    syslog(LOG_ERR, "Error en strcpy en get_ruta_script_y_variables");
+    syslog(LOG_ERR, "Error en strcpy en _get_ruta_script_y_variables");
     if (ruta_auxiliar) free(ruta_auxiliar);
     return SERVER_ERROR;
   }
@@ -1560,13 +1839,13 @@ int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char 
   if (interrogacion == NULL || interrogacion == ruta_auxiliar) {
     *ruta_script_p = (char *)malloc((strlen(ruta_auxiliar) + 1) * sizeof(char));
     if (*ruta_script_p == NULL) {
-      syslog(LOG_ERR, "Error en malloc en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en malloc en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       return SERVER_ERROR;
     }
     strcpy(*ruta_script_p, ruta_auxiliar);
     if (*ruta_script_p == NULL) {
-      syslog(LOG_ERR, "Error en strcpy en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en strcpy en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       if (*ruta_script_p) free(*ruta_script_p);
       return SERVER_ERROR;
@@ -1581,14 +1860,14 @@ int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char 
 
     *ruta_script_p = (char *)malloc((strlen(ruta_auxiliar) + 1) * sizeof(char));
     if (*ruta_script_p == NULL) {
-      syslog(LOG_ERR, "Error en malloc en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en malloc en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       if (*ruta_script_p) free(*ruta_script_p);
       return SERVER_ERROR;
     }
     strcpy(*ruta_script_p, ruta_auxiliar);
     if (*ruta_script_p == NULL) {
-      syslog(LOG_ERR, "Error en strcpy en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en strcpy en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       if (*ruta_script_p) free(*ruta_script_p);
       return SERVER_ERROR;
@@ -1596,14 +1875,14 @@ int get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char 
 
     *variables_p = (char *)malloc((strlen(variables_aux) + 1) * sizeof(char));
     if (*variables_p == NULL) {
-      syslog(LOG_ERR, "Error en malloc en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en malloc en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       if (*ruta_script_p) free(*ruta_script_p);
       return SERVER_ERROR;
     }
     strcpy(*variables_p, variables_aux);
     if (*variables_p == NULL) {
-      syslog(LOG_ERR, "Error en strcpy en get_ruta_script_y_variables");
+      syslog(LOG_ERR, "Error en strcpy en _get_ruta_script_y_variables");
       if (ruta_auxiliar) free(ruta_auxiliar);
       if (*ruta_script_p) free(*ruta_script_p);
       if (*variables_p) free(*variables_p);

@@ -6,4 +6,5 @@ tester_daemon
 prueba*
 html/*
 latex/*
-Doxyfile
+xml/*
+api-*
