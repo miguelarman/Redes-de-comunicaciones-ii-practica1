@@ -1,5 +1,7 @@
 #ifndef PROCESA_CONEXION_H
-/**@defgroup Procesa_conexion
+/**
+ * @file procesa_conexion.h
+ * @defgroup Procesa_conexion
  *
  * Esta librería se encarga de procesar cada
  * conexión que se recibe en el servidor. De

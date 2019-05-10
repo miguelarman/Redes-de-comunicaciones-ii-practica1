@@ -1,3 +1,14 @@
+/**
+ * @brief Librería que administra las conexiones y sockets
+ *
+ * En este fichero, se definen las funciones necesarias
+ * para manejar una conexión TCP
+ *
+ * @file connection.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
 #include "../includes/connection.h"
 
 #define ERROR -1
@@ -34,12 +45,9 @@ int tcp_listen(char *ip, int port, int backlog) {
 }
 
 int accept_connection(int sockfd, struct sockaddr* addr, socklen_t *addrlen) {
-  /* TODO */
-
   return accept(sockfd, addr, addrlen);
 }
 
 int close_connection(int fd) {
-  /* TODO */
   return close(fd);
 }

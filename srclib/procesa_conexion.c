@@ -1,5 +1,16 @@
 #define _POSIX_C_SOURCE 199309L
 
+/**
+ * @brief Librería que procesa cada conexión
+ *
+ * En este fichero, se definen las funciones necesarias
+ * para, dada una conexión, satifacer todas las peticiones
+ *
+ * @file procesa_conexiones.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
 #include "../includes/procesa_peticion.h"
 
 #define OK 1
@@ -21,6 +32,18 @@
  */
 int _cliente_quiere_conexion_persistente(Parsear *campos_parseados);
 
+/**
+ * @brief Función que analiza si el cliente quiere cerrar la conexión
+ *
+ * Esta función analiza una petición HTTP y,
+ * dependiendo de la versión del protocolo y
+ * del campo Connection de la cabecera, analiza
+ * si el cliente quiere mantener abierta la conexión
+ *
+ * @ingroup Procesa_conexion
+ * @param campos_parseados Estructura con los campos parseados de la petición
+ * @return resultado booleano
+ */
 int _cliente_quiere_cerrar_la_conexion(Parsear *campos_parseados);
 
 /********************************************/
