@@ -166,7 +166,9 @@ int _fichero_es_script(char *ruta);
  * fichero y los argumentos a pasar al mismo
  *
  * @ingroup Procesa_peticion
- * @param ruta Ruta del script
+ * @param ruta_absoluta Ruta del script con argumentos
+ * @param ruta_script_p Variable de salida de ruta del script
+ * @param variables_p Variable de variables del script
  * @return Valor booleano
  */
 int _get_ruta_script_y_variables(char *ruta_absoluta, char **ruta_script_p, char **variables_p);
@@ -197,6 +199,7 @@ int _cabecera_anadir_fecha_y_hora_actual(char *cabecera_respuesta, int *cabecera
  * @ingroup Procesa_peticion
  * @param cabecera_respuesta Cabecera de la respuesta
  * @param cabecera_length Cantidad de bytes leídos (salida)
+ * @param ruta_fichero Ruta del fichero
  * @return Código de ejecución
  */
 int _cabecera_anadir_tipo_fichero(char *cabecera_respuesta, int *cabecera_length, char *ruta_fichero);
@@ -340,7 +343,6 @@ int _responder_bad_request (int connfd, char* resources_path);
  *
  * @ingroup Procesa_peticion
  * @param connfd Descriptor del socket
- * @param resources_path Ruta de los recursos
  * @return Código de ejecución
  */
 int _responder_bad_request_sin_ficheros (int connfd);
@@ -366,7 +368,6 @@ int _responder_service_unavailable (int connfd, char* resources_path);
  *
  * @ingroup Procesa_peticion
  * @param connfd Descriptor del socket
- * @param resources_path Ruta de los recursos
  * @return Código de ejecución
  */
 int _responder_service_unavailable_sin_ficheros (int connfd);
@@ -392,7 +393,6 @@ int _responder_server_error (int connfd, char* resources_path);
  *
  * @ingroup Procesa_peticion
  * @param connfd Descriptor del socket
- * @param resources_path Ruta de los recursos
  * @return Código de ejecución
  */
 int _responder_server_error_sin_ficheros (int connfd);
@@ -418,7 +418,6 @@ int _responder_not_found (int connfd, char *resources_path);
  *
  * @ingroup Procesa_peticion
  * @param connfd Descriptor del socket
- * @param resources_path Ruta de los recursos
  * @return Código de ejecución
  */
 int _responder_not_found_sin_ficheros (int connfd);

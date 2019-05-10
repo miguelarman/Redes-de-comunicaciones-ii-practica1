@@ -7,11 +7,29 @@
 #define TRUE 1
 #define FALSE 0
 
-
+/**
+ * @brief Función que analiza si el cliente quiere conexión persistente
+ *
+ * Esta función analiza una petición HTTP y,
+ * dependiendo de la versión del protocolo y
+ * del campo Connection de la cabecera, analiza
+ * si el cliente quiere mantener abierta la conexión
+ *
+ * @ingroup Procesa_conexion
+ * @param campos_parseados Estructura con los campos parseados de la petición
+ * @return resultado booleano
+ */
 int _cliente_quiere_conexion_persistente(Parsear *campos_parseados);
 
 int _cliente_quiere_cerrar_la_conexion(Parsear *campos_parseados);
 
+/********************************************/
+/********************************************/
+/********************************************/
+/*       IMPLEMENTACIÓN DE FUNCIONES        */
+/********************************************/
+/********************************************/
+/********************************************/
 
 int procesa_conexion(int connfd, char *resources_path) {
 

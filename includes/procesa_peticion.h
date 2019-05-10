@@ -1,5 +1,7 @@
 #ifndef PROCESA_PETICION_H
-/**@defgroup Procesa_peticion
+/**
+ * @file procesa_peticion.h
+ * @defgroup Procesa_peticion
  *
  * Esta librería se encarga de procesar cada
  * petición recibida por el usuario, de forma
