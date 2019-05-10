@@ -1,7 +1,7 @@
 /**
- * @brief Descripción del fichero/librería
+ * @brief Contiene una implementacion de cola bloqueante
  *
- * Descripción más elaborada
+ * Cotiene una implementacion de cola bloqueante
  *
  * @file blockingQueue.c
  * @author Miguel Arconada Manteca y Mario García Pascual
@@ -15,20 +15,20 @@
 #include "../includes/blockingQueue.h"
 
 /**
- * @brief Descripción de la estructura
+ * @brief Estructura de la cola bloqueante
  *
  * @ingroup BlockingQueue
- * Descripción de la estructura
+ * Estructura de la cola bloqueante
  */
 struct _blockingQueue {
-    int size; /**< Descripción de campo de estructura */
-    int count; /**< Descripción de campo de estructura */
-    int head; /**< Descripción de campo de estructura */
-    int tail; /**< Descripción de campo de estructura */
-    void **entries; /**< Descripción de campo de estructura */
-    pthread_mutex_t lock; /**< Descripción de campo de estructura */
-    sem_t filled; /**< Descripción de campo de estructura */
-    sem_t empty; /**< Descripción de campo de estructura */
+    int size; /**< Tamanio de la cola */
+    int count; /**< Numero de elementos que hay en la cola */
+    int head; /**< Head de la cola */
+    int tail; /**< Tail de la cola */
+    void **entries; /**< Array que contiene los elementos de la cola */
+    pthread_mutex_t lock; /**< Mutex de la cola */
+    sem_t filled; /**< Semaforo de slots llenos */
+    sem_t empty; /**< Semaforo de slots vacios */
 };
 
 int blockingQueue_create(blockingQueue **q_out, int size) {
@@ -42,26 +42,18 @@ int blockingQueue_create(blockingQueue **q_out, int size) {
         return ERROR;
     }
     q = (blockingQueue *)malloc(sizeof(blockingQueue));
-    /* falta control */
     q->size = size;
     q->count = 0;
     q->head = 0;
     q->tail = 0;
     q->entries = (void **)malloc(sizeof(void *) * size);
-    /* falta control */
     pthread_mutex_init(&q->lock, NULL);
-    /* falta control */
     sem_init(&q->filled, 0, 0);
-    /* falta control */
     sem_init(&q->empty, 0, size);
-    /* falta control */
     *q_out = q;
     return SUCCESS;
 }
 
-/* cuando se llame a esta funcion se tiene que asegurar de que
- * la cola esta vacia y no hay hilos esperando en los semaforos,
- * esto lo hacemos a nivel de threadPool mediante envenenamiento */
 int blockingQueue_destroy(blockingQueue *q) {
     if (q == NULL) {
         return ERROR;
