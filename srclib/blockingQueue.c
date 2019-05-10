@@ -1,18 +1,34 @@
+/**
+ * @brief Descripción del fichero/librería
+ *
+ * Descripción más elaborada
+ *
+ * @file blockingQueue.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
 
 #include "../includes/blockingQueue.h"
 
+/**
+ * @brief Descripción de la estructura
+ *
+ * @ingroup BlockingQueue
+ * Descripción de la estructura
+ */
 struct _blockingQueue {
-    int size;
-    int count;
-    int head;
-    int tail;
-    void **entries;
-    pthread_mutex_t lock;
-    sem_t filled;
-    sem_t empty;
+    int size; /**< Descripción de campo de estructura */
+    int count; /**< Descripción de campo de estructura */
+    int head; /**< Descripción de campo de estructura */
+    int tail; /**< Descripción de campo de estructura */
+    void **entries; /**< Descripción de campo de estructura */
+    pthread_mutex_t lock; /**< Descripción de campo de estructura */
+    sem_t filled; /**< Descripción de campo de estructura */
+    sem_t empty; /**< Descripción de campo de estructura */
 };
 
 int blockingQueue_create(blockingQueue **q_out, int size) {

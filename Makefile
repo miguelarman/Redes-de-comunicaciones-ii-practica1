@@ -87,7 +87,7 @@ doxygen:
 	doxygen Doxyfile
 
 moxygen:
-	moxygen --anchors --groups --output api-%s.md xml/
+	moxygen --anchors --groups --output api/api-%s.md xml/
 	#"Da problemas con los enlaces. Usar la regex \{#(.*?)\} ----> <a name="dolar1"></a>"
 ########################################################
 

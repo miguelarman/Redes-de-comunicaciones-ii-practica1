@@ -6,7 +6,7 @@
  * Esta librería se encarga de demonizar
  */
 
-#define DAEMON_H
+#define DAEMON_H 
 
 #include <unistd.h>
 #include <stdio.h>

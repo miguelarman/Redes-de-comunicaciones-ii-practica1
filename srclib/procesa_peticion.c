@@ -47,7 +47,7 @@
 #define RESPONSE_SERVER_ERROR_CODE        500
 #define RESPONSE_SERVICE_UNAVAILABLE_CODE 503
 
-#define RESPONSE_OK_FRASE                    "OK"
+#define RESPONSE_OK_FRASE                    "OK" /*!<  */
 #define RESPONSE_BAD_REQUEST_FRASE           "Bad Request"
 #define RESPONSE_NOT_FOUND_FRASE             "Not Found"
 #define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"

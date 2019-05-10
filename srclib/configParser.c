@@ -1,3 +1,14 @@
+/**
+ * @brief Descripción del fichero/librería
+ *
+ * Descripción más elaborada
+ *
+ * @file configParser.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

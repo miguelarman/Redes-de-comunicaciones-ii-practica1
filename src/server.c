@@ -1,3 +1,13 @@
+/**
+ * @brief Descripción del fichero/librería
+ *
+ * Descripción más elaborada
+ *
+ * @file server.c
+ * @author Miguel Arconada Manteca y Mario García Pascual
+ * @date 9-5-2019
+ */
+
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -13,31 +23,51 @@
 #include "../includes/server.h"
 #include "../includes/configParser.h"
 
-#define SERVER_PORT 9999
-#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 9999 /*!< Descripción de macro */
+#define SERVER_IP "127.0.0.1" /*!< Descripción de macro */
 
 
-int close_server = 0;
-int listenfd;
-char abspath[MAX_STR];
+int close_server = 0; /**< Descipción de la variable */
+int listenfd; /**< Descipción de la variable */
+char abspath[MAX_STR]; /**< Descipción de la variable */
 
-
+/**
+ * @brief Descripción simple de la función
+ *
+ * Descripción de la funcion
+ *
+ * @ingroup Server
+ * @param signum Descripción del argumento
+ * @return Descripción del retorno
+ */
 void sig_int(int signum) {
   shutdown(listenfd, SHUT_RD);      /* cierra el socket del servidor */
   close_server = 1;
   exit(1);
 }
 
-/*
-  Esta es la estructura que se pasa por la cola bloqueante para que los hilos
-  la procesen
-*/
-
+/**
+ * @brief Descripción de la estructura
+ *
+ * Esta es la estructura que se pasa por la cola bloqueante
+ * para que los hilos la procesen
+ */
 typedef struct {
-    int clifd;                /* client file descriptor */
-    int poisoned;             /* indica si el paquete esta envenado */
+    int clifd;                /**< client file descriptor */
+    int poisoned;             /**< indica si el paquete esta envenado */
 } client;
 
+/**
+ * @brief Descripción simple de la función
+ *
+ * Descripción de la funcion
+ *
+ * @ingroup Server
+ * @param c_out Descripción del argumento
+ * @param clifd Descripción del argumento
+ * @param poisoned Descripción del argumento
+ * @return Descripción del retorno
+ */
 int client_create(client **c_out, int clifd, int poisoned)
 {
   client *c;
@@ -54,6 +84,15 @@ int client_create(client **c_out, int clifd, int poisoned)
   return SUCCESS;
 }
 
+/**
+ * @brief Descripción simple de la función
+ *
+ * Descripción de la funcion
+ *
+ * @ingroup Server
+ * @param c Descripción del argumento
+ * @return Descripción del retorno
+ */
 int client_destroy(client *c)
 {
   if (c == NULL) {
@@ -68,6 +107,15 @@ int client_destroy(client *c)
   Rutina de los hilos
 */
 
+/**
+ * @brief Descripción simple de la función
+ *
+ * Descripción de la funcion
+ *
+ * @ingroup Server
+ * @param arg Descripción del argumento
+ * @return Descripción del retorno
+ */
 void *thread_main(void *arg) {
   blockingQueue *queue;
   client *c;
@@ -86,6 +134,16 @@ void *thread_main(void *arg) {
   }
 }
 
+/**
+ * @brief Descripción simple de la función
+ *
+ * Descripción de la funcion
+ *
+ * @ingroup Server
+ * @param argc Descripción del argumento
+ * @param argv Descripción del argumento
+ * @return Descripción del retorno
+ */
 int main(int argc, char **argv)
 {
   int i, connfd;

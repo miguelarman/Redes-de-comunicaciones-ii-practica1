@@ -1,7 +1,14 @@
-#ifndef SERVIDOR_THREADPOOL_H
-#define SERVIDOR_THREADPOOL_H
+#ifndef SERVER_H
+/**
+ * @file server.h
+ * @defgroup Server
+ *
+ * Descripción del grupo
+ */
 
-#define QUEUE_SIZE 1024
-#define THREAD_COUNT 20
+#define SERVER_H /*!< Macro de compilación */
+
+#define QUEUE_SIZE 1024 /*!< Descripción de macro */
+#define THREAD_COUNT 20 /*!< Descripción de macro */
 
 #endif
