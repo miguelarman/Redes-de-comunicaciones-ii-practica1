@@ -1,14 +1,14 @@
 #ifndef PROCESA_CONEXION_H
 /**
  * @file procesa_conexion.h
- * @defgroup Procesa_conexion
+ * @defgroup Procesa_conexion Procesa conexión
  *
  * Esta librería se encarga de procesar cada
  * conexión que se recibe en el servidor. De
  * analizar si se pide una conexión persistente, etc.
  */
 
-#define PROCESA_CONEXION_H
+#define PROCESA_CONEXION_H /*!< Macro de compilación */
 
 /**
  * @brief Función que procesa una conexión

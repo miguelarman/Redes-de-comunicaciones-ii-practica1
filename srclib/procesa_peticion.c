@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 199309L /*!< Macro de compilación */
 
 
 
@@ -20,91 +20,91 @@
 
 
 /* Valores útiles de dimensiones */
-#define MAX_FECHA        512
-#define MAX_TIPO_FICHERO 32
-#define MAX_CABECERA     10000
-#define MAX_LINEA        512
-#define MAX_COMANDO      512
-#define MAX_PATH         1024
-#define MAX_RESULTADO    4096
+#define MAX_FECHA        512    /*!< Máximo tamaño de la fecha */
+#define MAX_TIPO_FICHERO 32     /*!< Máximo tamaño del tipo de fichero */
+#define MAX_CABECERA     10000  /*!< Máximo tamaño de la cabecera */
+#define MAX_LINEA        512    /*!< Máximo tamaño de cada línea */
+#define MAX_COMANDO      512    /*!< Máximo tamaño del comando de scripts */
+#define MAX_PATH         1024   /*!< Máximo tamaño de cada ruta */
+#define MAX_RESULTADO    4096   /*!< Máximo tamaño del resultado del script */
 
-#define TAMANIO_CHUNK    1024
+#define TAMANIO_CHUNK    1024   /*!< Máximo tamaño de cada chunk a mandar por la red */
 
 /* Paths de páginas de errores */
-#define INDEX_BASICO               "/www/index.html"
-#define PAGINA_BAD_REQUEST         "/www/400.html"
-#define PAGINA_NOT_FOUND           "/www/404.html"
-#define PAGINA_SERVER_ERROR        "/www/500.html"
-#define PAGINA_SERVICE_UNAVAILABLE "/www/503.html"
+#define INDEX_BASICO               "/www/index.html"  /*!< URL de la página principal */
+#define PAGINA_BAD_REQUEST         "/www/400.html"    /*!< URL de la página de error 400 */
+#define PAGINA_NOT_FOUND           "/www/404.html"    /*!< URL de la página de error 404 */
+#define PAGINA_SERVER_ERROR        "/www/500.html"    /*!< URL de la página de error 500 */
+#define PAGINA_SERVICE_UNAVAILABLE "/www/503.html"    /*!< URL de la página de error 503 */
 
-#define HTTP_RESPONSE_VERSION "HTTP/1.1"
+#define HTTP_RESPONSE_VERSION "HTTP/1.1"  /*!< Versión de HTTP de nuestro servidor */
 
-#define ALLOW_LISTA "OPTIONS, GET, POST"
+#define ALLOW_LISTA "OPTIONS, GET, POST"  /*!< Lista de comandos que acepta nuestro servidor */
 
-#define RESPONSE_OK_CODE                  200
-#define RESPONSE_BAD_REQUEST_CODE         400
-#define RESPONSE_NOT_FOUND_CODE           404
-#define RESPONSE_SERVER_ERROR_CODE        500
-#define RESPONSE_SERVICE_UNAVAILABLE_CODE 503
+#define RESPONSE_OK_CODE                  200 /*!< Código de respuesta de OK */
+#define RESPONSE_BAD_REQUEST_CODE         400 /*!< Código de respuesta de Bad Request */
+#define RESPONSE_NOT_FOUND_CODE           404 /*!< Código de respuesta de Not Found */
+#define RESPONSE_SERVER_ERROR_CODE        500 /*!< Código de respuesta de Server Error */
+#define RESPONSE_SERVICE_UNAVAILABLE_CODE 503 /*!< Código de respuesta de Service Unavailable */
 
-#define RESPONSE_OK_FRASE                    "OK" /*!<  */
-#define RESPONSE_BAD_REQUEST_FRASE           "Bad Request"
-#define RESPONSE_NOT_FOUND_FRASE             "Not Found"
-#define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"
-#define RESPONSE_SERVICE_UNAVAILABLE_FRASE   "Service Unavailable"
+#define RESPONSE_OK_FRASE                    "OK"                     /*!< Frase de respuesta de OK */
+#define RESPONSE_BAD_REQUEST_FRASE           "Bad Request"            /*!< Frase de respuesta de Bad Request */
+#define RESPONSE_NOT_FOUND_FRASE             "Not Found"              /*!< Frase de respuesta de Not Found */
+#define RESPONSE_SERVER_ERROR_FRASE          "Internal Server Error"  /*!< Frase de respuesta de Server Error */
+#define RESPONSE_SERVICE_UNAVAILABLE_FRASE   "Service Unavailable"    /*!< Frase de respuesta de Service Unavailable */
 
 /* Ficheros auxiliares */
-#define FICHERO_AUX_PATH     "/fichero_aux.txt"
-#define RUTA_FICHERO_RETORNO "/resultados.html"
+#define FICHERO_AUX_PATH     "/fichero_aux.txt" /*!< Path de un fichero auxiliar */
+#define RUTA_FICHERO_RETORNO "/resultados.html" /*!< Path del fichero donde se escribe el resultado del script */
 
 /* Extensiones de ficheros */
-#define EXTENSION_HTML   ".html"
-#define EXTENSION_JPG    ".jpg"
-#define EXTENSION_JPEG   ".jpeg"
-#define EXTENSION_ICO    ".ico"
-#define EXTENSION_GIF    ".gif"
-#define EXTENSION_TXT    ".txt"
-#define EXTENSION_MPEG   ".mpeg"
-#define EXTENSION_MP4    ".mp4"
-#define EXTENSION_PDF    ".pdf"
-#define EXTENSION_DOC    ".doc"
-#define EXTENSION_DOCX   ".docx"
-#define EXTENSION_WAV    ".wav"
-#define EXTENSION_PYTHON ".py"
-#define EXTENSION_PHP    ".php"
+#define EXTENSION_HTML   ".html"  /*!< Extensión de ficheros html */
+#define EXTENSION_JPG    ".jpg"   /*!< Extensión de ficheros jpg */
+#define EXTENSION_JPEG   ".jpeg"  /*!< Extensión de ficheros jpeg */
+#define EXTENSION_ICO    ".ico"   /*!< Extensión de ficheros ico */
+#define EXTENSION_GIF    ".gif"   /*!< Extensión de ficheros gif */
+#define EXTENSION_TXT    ".txt"   /*!< Extensión de ficheros txt */
+#define EXTENSION_MPEG   ".mpeg"  /*!< Extensión de ficheros mpeg */
+#define EXTENSION_MP4    ".mp4"   /*!< Extensión de ficheros mp4 */
+#define EXTENSION_PDF    ".pdf"   /*!< Extensión de ficheros pdf */
+#define EXTENSION_DOC    ".doc"   /*!< Extensión de ficheros doc */
+#define EXTENSION_DOCX   ".docx"  /*!< Extensión de ficheros docx */
+#define EXTENSION_WAV    ".wav"   /*!< Extensión de ficheros wav */
+#define EXTENSION_PYTHON ".py"    /*!< Extensión de ficheros python */
+#define EXTENSION_PHP    ".php"   /*!< Extensión de ficheros php */
 
 /* Valores del campo content-type */
-#define HTML_TYPE  "text/html"
-#define JPG_TYPE   "image/jpeg"
-#define JPEG_TYPE  "image/jpeg"
-#define ICO_TYPE   "image/x-icon"
-#define GIF_TYPE   "image/gif"
-#define TXT_TYPE   "text/plain"
-#define MPEG_TYPE  "video/mpeg"
-#define MP4_TYPE   "video/mp4"
-#define PDF_TYPE   "application/pdf"
-#define DOC_TYPE   "application/msword"
-#define DOCX_TYPE  "application/msword"
-#define WAV_TYPE   "audio/wav"
-#define OTHER_TYPE "text/plain"
+#define HTML_TYPE  "text/html"          /*!< Tipo de ficheros html */
+#define JPG_TYPE   "image/jpeg"         /*!< Tipo de ficheros jpg */
+#define JPEG_TYPE  "image/jpeg"         /*!< Tipo de ficheros jpeg */
+#define ICO_TYPE   "image/x-icon"       /*!< Tipo de ficheros ico */
+#define GIF_TYPE   "image/gif"          /*!< Tipo de ficheros gif */
+#define TXT_TYPE   "text/plain"         /*!< Tipo de ficheros txt */
+#define MPEG_TYPE  "video/mpeg"         /*!< Tipo de ficheros mpeg */
+#define MP4_TYPE   "video/mp4"          /*!< Tipo de ficheros mp4 */
+#define PDF_TYPE   "application/pdf"    /*!< Tipo de ficheros pdf */
+#define DOC_TYPE   "application/msword" /*!< Tipo de ficheros doc */
+#define DOCX_TYPE  "application/msword" /*!< Tipo de ficheros docx */
+#define WAV_TYPE   "audio/wav"          /*!< Tipo de ficheros wav */
+#define OTHER_TYPE "text/plain"         /*!< Tipo de ficheros de texto plano */
 
-#define PYTHON 10
-#define PHP 11
-#define OTRO_TIPO 12
+#define PYTHON 10 /*!< Código identificador de ficheros python */
+#define PHP 11 /*!< Código identificador de ficheros php */
+#define OTRO_TIPO 12 /*!< Código identificador de ficheros de otro tipo */
 
 /* Códigos de retorno de funciones */
-#define ERROR                     -1
-#define OK                         0
-#define TRUE                       1
-#define FALSE                      0
-#define SCRIPT_NO_EXISTE           20
-#define SCRIPT_NO_SOPORTADO        21
-#define RESOURCES_PATH_NULL_ERROR  22
-#define DESCRIPTOR_CONN_INCORRECTO 23
-#define SERVER_ERROR               24
-#define SEND_ERROR                 25
-#define PIPE_ERROR                 26
-#define PETICION_INVALIDA          27
+#define ERROR                     -1  /*!< Retorno de funciones */
+#define OK                         0  /*!< Retorno de funciones */
+#define TRUE                       1  /*!< Valor booleano de true */
+#define FALSE                      0  /*!< Valor booleano de false */
+#define SCRIPT_NO_EXISTE           20 /*!< Retorno de funciones */
+#define SCRIPT_NO_SOPORTADO        21 /*!< Retorno de funciones */
+#define RESOURCES_PATH_NULL_ERROR  22 /*!< Retorno de funciones */
+#define DESCRIPTOR_CONN_INCORRECTO 23 /*!< Retorno de funciones */
+#define SERVER_ERROR               24 /*!< Retorno de funciones */
+#define SEND_ERROR                 25 /*!< Retorno de funciones */
+#define PIPE_ERROR                 26 /*!< Retorno de funciones */
+#define PETICION_INVALIDA          27 /*!< Retorno de funciones */
 
 
 

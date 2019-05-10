@@ -1,7 +1,7 @@
 #ifndef BLOCKINGQUEUE_H
 /**
  * @file blockingQueue.h
- * @defgroup BlockingQueue
+ * @defgroup BlockingQueue Cola bloqueante
  *
  * Contiene una implementacion de cola bloqueante
  */

@@ -1,7 +1,7 @@
 #ifndef CONFIGPARSER_H
 /**
  * @file configParser.h
- * @defgroup ConfigParser
+ * @defgroup ConfigParser Configuración de proyecto
  *
  * Contiene la funcion para parsear el fichero de configuracion del servidor.
  */

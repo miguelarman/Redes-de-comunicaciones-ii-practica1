@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 /**
  * @file server.h
- * @defgroup Server
+ * @defgroup Server Servidor
  *
  * Descripción del grupo
  */

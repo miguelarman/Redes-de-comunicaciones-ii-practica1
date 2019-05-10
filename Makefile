@@ -83,7 +83,6 @@ doxy-file:
 	# doxygen -g
 
 doxygen:
-	@echo "Generando documentación Doxygen"
 	doxygen Doxyfile
 
 moxygen:

@@ -1,13 +1,13 @@
 #ifndef CONNECTION_H
 /**
  * @file connection.h
- * @defgroup Connection
+ * @defgroup Connection Funciones de conexión
  *
  * Esta librería se encarga de adiminstrar una conexión
  */
 
 
-#define CONNECTION_H
+#define CONNECTION_H /*!< Macro de compilación */
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#define ERROR_BIND -2
+#define ERROR_BIND -2 /*!< Retorno cuando no se puede hacer bind correctamente */
 
 /**
  * @brief Función que prepara un socket TCP

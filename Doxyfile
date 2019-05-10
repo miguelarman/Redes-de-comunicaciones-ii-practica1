@@ -819,10 +819,13 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =  includes/daemon.h srclib/daemon.c \
+INPUT                  =  includes/configParser.h srclib/configParser.c \
+                          includes/blockingQueue.h srclib/blockingQueue.c \
+                          includes/server.h src/server.c \
+                          includes/daemon.h srclib/daemon.c \
+                          includes/connection.h srclib/connection.c \
                           includes/procesa_peticion.h srclib/procesa_peticion.c \
-                          includes/procesa_conexion.h srclib/procesa_conexion.c \
-                          includes/connection.h srclib/connection.c
+                          includes/procesa_conexion.h srclib/procesa_conexion.c
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

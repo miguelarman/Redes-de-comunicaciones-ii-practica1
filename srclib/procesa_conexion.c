@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 199309L /*!< Macro de compilación */
 
 /**
  * @brief Librería que procesa cada conexión
@@ -6,17 +6,17 @@
  * En este fichero, se definen las funciones necesarias
  * para, dada una conexión, satifacer todas las peticiones
  *
- * @file procesa_conexiones.c
+ * @file procesa_conexion.c
  * @author Miguel Arconada Manteca y Mario García Pascual
  * @date 9-5-2019
  */
 
 #include "../includes/procesa_peticion.h"
 
-#define OK 1
-#define ERROR 0
-#define TRUE 1
-#define FALSE 0
+#define OK 1    /*!< Retorno de funciones */
+#define ERROR 0 /*!< Retorno de funciones */
+#define TRUE 1  /*!< Valor booleano */
+#define FALSE 0 /*!< Valor booleano */
 
 /**
  * @brief Función que analiza si el cliente quiere conexión persistente
@@ -106,14 +106,15 @@ int _cliente_quiere_conexion_persistente(Parsear *campos_parseados) {
   char *header_name  = NULL;
   char *header_value = NULL;
 
-  /* Comprueba si es una petición con HTTP 1.1,
+  /*
+   * Comprueba si es una petición con HTTP 1.1,
    * porque si no no puede hacer conexión persistente
    */
   if ((int)campos_parseados->minor_version == 0) {
     return FALSE;
   }
 
-  /* TODO Comprueba si el cliente ha especificado en los
+  /* Comprueba si el cliente ha especificado en los
    * headers que quiere mantener activa la conexión
    */
 
