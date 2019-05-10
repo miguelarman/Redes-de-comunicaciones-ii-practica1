@@ -1,9 +1,9 @@
 #include "../includes/daemon.h"
 
-#define WORKING_DIRECTORY "/"
-#define MASK 0
-#define OK 0
-#define ERROR -1
+#define WORKING_DIRECTORY "/" /*!< Directorio raíz del sistema */
+#define MASK 0                /*!< Valor de la máscara de ficheros */
+#define OK 0                  /*!< Retorno de funciones */
+#define ERROR -1              /*!< Retorno de funciones */
 
 int demonizar(void) {
 
@@ -17,7 +17,6 @@ int demonizar(void) {
     exit(EXIT_FAILURE); /* Fallo de creacion del fork */
   }
   if (child_pid > 0) {
-    /* TODO exit(EXIT_SUCCESS); */
     return ES_PADRE; /* Salir del padre */
   }
 

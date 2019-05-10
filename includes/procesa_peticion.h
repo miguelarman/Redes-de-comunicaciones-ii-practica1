@@ -1,7 +1,7 @@
 #ifndef PROCESA_PETICION_H
 /**
  * @file procesa_peticion.h
- * @defgroup Procesa_peticion
+ * @defgroup Procesa_peticion Procesa petición
  *
  * Esta librería se encarga de procesar cada
  * petición recibida por el usuario, de forma
@@ -10,7 +10,7 @@
  * detectar errores
  */
 
-#define PROCESA_PETICION_H
+#define PROCESA_PETICION_H /*!< Macro de compilación */
 
 #include <assert.h>
 #include <errno.h>
@@ -29,28 +29,35 @@
 #include <unistd.h>
 #include "../includes/picohttpparser.h"
 
-#define PARSEERROR -2
-#define REQUESTISTOOLONGERROR -3
-#define IOERROR -4
-#define CLOSE_CONNECTION_REQUEST -5
+#define PARSEERROR -2               /*!< Error al parsear argumentos */
+#define REQUESTISTOOLONGERROR -3    /*!< Error: petición es demasiado larga */
+#define IOERROR -4                  /*!< Error de IO de SO */
+
+#define CLOSE_CONNECTION_REQUEST -5 /*!< El cliente ha pedido cerrar la conexión */
 
 
-
+/**
+ * @brief Petición parseador
+ *
+ * Esta estructura contiene todos los argumentos
+ * parseados de una petición HTTP: método (POST,
+ * GET, ...), path del fichero pedido, headers, ...
+ */
 typedef struct Parsear_ {
-  char buf[4096];
-  char *body;
-  int bodylen;
-  char *method;
-  char *path;
-  int pret;
-  int minor_version;
-  struct phr_header headers[100];
-  size_t buflen;
-  size_t prevbuflen;
-  size_t method_len;
-  size_t path_len;
-  size_t num_headers;
-  ssize_t rret;
+  char              buf[4096];      /**< Petición como cadena de caracteres */
+  char             *body;           /**< Cuerpo de la petición */
+  int               bodylen;        /**< Longitud del cuerpo de la petición */
+  char             *method;         /**< Método de la petición */
+  char             *path;           /**< Path pedida */
+  int               pret;           /**< Retorno de la función phr_parse_request() */
+  int               minor_version;  /**< Versión HTTP de la petición */
+  struct phr_header headers[100];   /**< Estructura con los headers de la petición */
+  size_t            buflen;         /**< Logitud de la petición */
+  size_t            prevbuflen;     /**< Valor privado usado al hacer receive() */
+  size_t            method_len;     /**< Longitud del método de la petición */
+  size_t            path_len;       /**< Longitud de la path de la petición */
+  size_t            num_headers;    /**< Cantidad de headers de la petición */
+  ssize_t           rret;           /**< Retorno del read() al leer del socket */
 } Parsear;
 
 /**

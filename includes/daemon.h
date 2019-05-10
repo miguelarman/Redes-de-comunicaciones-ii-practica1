@@ -1,12 +1,12 @@
 #ifndef DAEMON_H
 /**
  * @file daemon.h
- * @defgroup Daemon
+ * @defgroup Daemon Daemonizar procesos
  *
  * Esta librería se encarga de demonizar
  */
 
-#define DAEMON_H 
+#define DAEMON_H /*!< Macro de compilación */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define ES_PADRE 5
+#define ES_PADRE 5 /*!< Retorno a la función llamante cuando el proceso es el padre */
 
 /**
  * @brief Función que demoniza

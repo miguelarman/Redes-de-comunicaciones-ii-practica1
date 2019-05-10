@@ -1,7 +1,7 @@
 #ifndef CONFIGPARSER_H
 /**
  * @file configParser.h
- * @defgroup ConfigParser
+ * @defgroup ConfigParser Configuración de proyecto
  *
  * Descripción del grupo
  */

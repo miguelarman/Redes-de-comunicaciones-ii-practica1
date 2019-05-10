@@ -11,7 +11,7 @@
 
 #include "../includes/connection.h"
 
-#define ERROR -1
+#define ERROR -1 /*!< Retorno de funciones */
 
 
 int tcp_listen(char *ip, int port, int backlog) {
@@ -32,13 +32,11 @@ int tcp_listen(char *ip, int port, int backlog) {
 
   if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     /* TODO */
-    perror("Error en el bind");
     return ERROR_BIND;
   }
 
   if (listen(sockfd, backlog) < 0) {
     /*  TODO */
-    perror("Error en el listen");
   }
 
   return sockfd;
