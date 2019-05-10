@@ -1,7 +1,7 @@
 /**
- * @brief Descripción del fichero/librería
+ * @brief Parser del fichero de configuracion
  *
- * Descripción más elaborada
+ * Parsea un fichero .conf y rellena una estructura configOptions
  *
  * @file configParser.c
  * @author Miguel Arconada Manteca y Mario García Pascual
@@ -16,6 +16,8 @@
 #include "../includes/confuse.h"
 #include "../includes/configParser.h"
 
+// utiliza confuse para parsear el fichero de configuracion y lo guarda
+// en una confOptions
 int parseConfig(char *conffile, configOptions *out_confopt) {
   if (conffile == NULL || out_confopt == NULL) {
     return ERROR;
