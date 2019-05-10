@@ -1,7 +1,9 @@
 /**
- * @brief Descripción del fichero/librería
+ * @brief Este es el fichero que contiene la funcion que inicia el servidor.
  *
- * Descripción más elaborada
+ * En este fichero esta la funcion principal del servidor, que lee el fichero
+ * de configuracion, demoniza, crea threads que luego procesaran a los clientes
+ * ...
  *
  * @file server.c
  * @author Miguel Arconada Manteca y Mario García Pascual
@@ -23,22 +25,22 @@
 #include "../includes/server.h"
 #include "../includes/configParser.h"
 
-#define SERVER_PORT 9999 /*!< Descripción de macro */
-#define SERVER_IP "127.0.0.1" /*!< Descripción de macro */
+#define SERVER_PORT 9999 /*!< Puerto del servidor */
+#define SERVER_IP "127.0.0.1" /*!< Direccion IP del servidor */
 
 
-int close_server = 0; /**< Descipción de la variable */
-int listenfd; /**< Descipción de la variable */
-char abspath[MAX_STR]; /**< Descipción de la variable */
+int close_server = 0; /**< Bandera para cerrar el servidor */
+int listenfd; /**< File descriptor devuelto por listen */
+char abspath[MAX_STR]; /**< Ruta absoluta del servidor */
 
 /**
- * @brief Descripción simple de la función
+ * @brief Funcion encargada de manejar la interrupcion.
  *
- * Descripción de la funcion
+ * Esta funcion se encarga de manejar la interrucion para apagar el servidor.
  *
  * @ingroup Server
- * @param signum Descripción del argumento
- * @return Descripción del retorno
+ * @param signum El numero de la interrupcion.
+ * @return nada
  */
 void sig_int(int signum) {
   shutdown(listenfd, SHUT_RD);      /* cierra el socket del servidor */
@@ -47,26 +49,26 @@ void sig_int(int signum) {
 }
 
 /**
- * @brief Descripción de la estructura
+ * @brief Esta estructura se pasa por la cola para que los hilos la procesen.
  *
  * Esta es la estructura que se pasa por la cola bloqueante
  * para que los hilos la procesen
  */
 typedef struct {
     int clifd;                /**< client file descriptor */
-    int poisoned;             /**< indica si el paquete esta envenado */
+    int poisoned;             /**< indica si el paquete esta envenenado */
 } client;
 
 /**
- * @brief Descripción simple de la función
+ * @brief Funcion constructora de la estructura client.
  *
- * Descripción de la funcion
+ * Construye e inicializa los parametros de la estructura client.
  *
  * @ingroup Server
- * @param c_out Descripción del argumento
- * @param clifd Descripción del argumento
- * @param poisoned Descripción del argumento
- * @return Descripción del retorno
+ * @param c_out El cliente creado se guardara en este puntero.
+ * @param clifd El descriptor de fichero para procesar la conexion del cliente.
+ * @param poisoned Indica si el paquete esta envenenado o no.
+ * @return ERROR si ha habido algun problema; SUCCESS en caso contrario.
  */
 int client_create(client **c_out, int clifd, int poisoned)
 {
@@ -85,13 +87,13 @@ int client_create(client **c_out, int clifd, int poisoned)
 }
 
 /**
- * @brief Descripción simple de la función
+ * @brief Funcion destructora de la estructura client.
  *
- * Descripción de la funcion
+ * Destruye y libera un objeto client.
  *
  * @ingroup Server
- * @param c Descripción del argumento
- * @return Descripción del retorno
+ * @param c El cliente a destruir.
+ * @return ERROR si ha habido algun problema; SUCCESS en caso contrario.
  */
 int client_destroy(client *c)
 {
@@ -108,13 +110,13 @@ int client_destroy(client *c)
 */
 
 /**
- * @brief Descripción simple de la función
+ * @brief Función de los hilos de la threadpool.
  *
- * Descripción de la funcion
+ * Función que ejecutan los hilos de la threadpool del servidor.
  *
  * @ingroup Server
- * @param arg Descripción del argumento
- * @return Descripción del retorno
+ * @param arg La cola bloqueante con la que se comuncia con el padre.
+ * @return nada
  */
 void *thread_main(void *arg) {
   blockingQueue *queue;
@@ -135,14 +137,14 @@ void *thread_main(void *arg) {
 }
 
 /**
- * @brief Descripción simple de la función
+ * @brief Función main.
  *
- * Descripción de la funcion
+ * Función principal del servidor.
  *
  * @ingroup Server
- * @param argc Descripción del argumento
- * @param argv Descripción del argumento
- * @return Descripción del retorno
+ * @param argc Número de argumentos.
+ * @param argv Argumentos.
+ * @return ERROR si ha habido algun problema; SUCCESS en caso contrario.
  */
 int main(int argc, char **argv)
 {
@@ -154,6 +156,11 @@ int main(int argc, char **argv)
   pthread_t threads[THREAD_COUNT];
   client **c;
   configOptions opts;
+
+  /* Maneja la interrupcion para cerrar el servidor */
+  if (signal(SIG_INT, sig_int) == SIG_ERR) {
+    return ERROR;
+  }
 
   /* Se parsean los parametros del fichero de configuracion */
   if (parseConfig("server.conf", &opts) == ERROR) {
