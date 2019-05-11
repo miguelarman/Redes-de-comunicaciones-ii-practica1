@@ -80,10 +80,10 @@ blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
 ########################################################
 doxy-file:
 	@echo "Al hacer este paso se sobreescribe el Doxyfile. Es necesario poner RECURSIVE = YES y GENERATE_XML = YES para usar moxygen"
-	# doxygen -g
+	doxygen -g
 
 doxygen:
-	doxygen Doxyfile
+	doxygen Doxyfile_personalizado
 
 moxygen:
 	moxygen --anchors --groups --output api/api-%s.md xml/
