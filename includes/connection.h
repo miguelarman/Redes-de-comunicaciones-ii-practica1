@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <errno.h>
 
-#define ERROR_BIND -2 /*!< Retorno cuando no se puede hacer bind correctamente */
+#define ERROR_BIND    -2 /*!< Retorno cuando no se puede hacer crear el socket correctamente */
+#define ERROR_SOCKET  -3 /*!< Retorno cuando no se puede hacer bind() correctamente */
+#define ERROR_LISTEN  -4 /*!< Retorno cuando no se puede hacer listen() correctamente */
 
 /**
  * @brief Función que prepara un socket TCP

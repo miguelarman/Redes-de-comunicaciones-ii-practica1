@@ -13,6 +13,8 @@
 
 #include "../includes/procesa_peticion.h"
 
+#include <syslog.h>
+
 #define OK 1    /*!< Retorno de funciones */
 #define ERROR 0 /*!< Retorno de funciones */
 #define TRUE 1  /*!< Valor booleano */
@@ -61,26 +63,30 @@ int procesa_conexion(int connfd, char *resources_path) {
 
   retorno = parsear_peticion(connfd, &campos_parseados);
   if (retorno != OK) {
-    /* TODO */
     if (retorno == CLOSE_CONNECTION_REQUEST) {
       return OK;
+    } else {
+      syslog(LOG_ERR, "Error al llamar a parsear petición");
+      return ERROR_PARSEAR_CONEXION;
     }
   }
 
   retorno = procesa_peticion(connfd, resources_path, campos_parseados);
   if (retorno != OK) {
-    /* TODO */
+      syslog(LOG_ERR, "Error al llamar a procesa_peticion");
+      return ERROR_PROCESA_CONEXION;
   }
 
   /* Si el cliente solicita conexion persistente en HTML 1.1 sigue ejecutando */
   if (_cliente_quiere_conexion_persistente(&campos_parseados) == TRUE) {
 
-    /* TODO */
+    /* Mientras el cliente mantenga la conexión abierta hacemos un bucle */
     while (_cliente_quiere_cerrar_la_conexion(&campos_parseados) == FALSE) {
       /* El cliente no quiere cerrar la conexión, así que se vuelve a recibir otra petición */
       retorno = parsear_peticion(connfd, &campos_parseados);
       if (retorno != OK) {
-        /* TODO */
+            syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno");
+            return ERROR_PARSEAR_CONEXION;
       }
 
       if (retorno == CLOSE_CONNECTION_REQUEST) {
@@ -89,7 +95,8 @@ int procesa_conexion(int connfd, char *resources_path) {
 
       retorno = procesa_peticion(connfd, resources_path, campos_parseados);
       if (retorno != OK) {
-        /* TODO */
+        syslog(LOG_ERR, "Error al llamar a procesa_peticion (%d)", retorno");
+        return ERROR_PROCESA_CONEXION;
       }
     }
     return OK;
@@ -122,21 +129,30 @@ int _cliente_quiere_conexion_persistente(Parsear *campos_parseados) {
 
     header_name = (char *)malloc(((int)campos_parseados->headers[i].name_len + 1) * sizeof(char));
     if (header_name == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en malloc() en _cliente_quiere_conexion_persistente");
+      return ERROR;
     }
     header_value = (char *)malloc(((int)campos_parseados->headers[i].value_len + 1) * sizeof(char));
     if (header_value == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en malloc() en _cliente_quiere_conexion_persistente");
+      if (header_name) free(header_name);
+      return ERROR;
     }
 
     /* Guarda los valores de header_name y header_value */
     sprintf(header_name, "%.*s", (int)campos_parseados->headers[i].name_len, campos_parseados->headers[i].name);
     if (header_name == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en sprintf() en _cliente_quiere_conexion_persistente");
+      if (header_name) free(header_name);
+      if (header_value) free(header_value);
+      return ERROR;
     }
     sprintf(header_value, "%.*s", (int)campos_parseados->headers[i].value_len, campos_parseados->headers[i].value);
     if (header_value == NULL) {
-      /* TODO */
+      syslog(LOG_ERR, "Error en sprintf() en _cliente_quiere_conexion_persistente");
+      if (header_name) free(header_name);
+      if (header_value) free(header_value);
+      return ERROR;
     }
 
     if (strcmp(header_name, "Connection") == 0) {
@@ -164,8 +180,6 @@ int _cliente_quiere_conexion_persistente(Parsear *campos_parseados) {
 
 int _cliente_quiere_cerrar_la_conexion(Parsear *campos_parseados) {
 
-  /* return TRUE; */
-
   char *metodo = NULL;
 
   if (campos_parseados->rret == 0) {
@@ -174,12 +188,15 @@ int _cliente_quiere_cerrar_la_conexion(Parsear *campos_parseados) {
 
   metodo = (char *)malloc(((int)campos_parseados->method_len + 1) * sizeof(char));
   if (metodo == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en malloc() en _cliente_quiere_cerrar_la_conexion");
+    return ERROR;
   }
 
   sprintf(metodo, "%.*s", (int)campos_parseados->method_len, campos_parseados->method);
   if (metodo == NULL) {
-    /* TODO */
+    syslog(LOG_ERR, "Error en malloc() en _cliente_quiere_cerrar_la_conexion");
+    if (metodo) free(metodo);
+    return ERROR;
   }
 
   if (strcmp(metodo, "CLOSE") == 0) {

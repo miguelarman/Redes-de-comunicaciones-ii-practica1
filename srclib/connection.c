@@ -11,6 +11,8 @@
 
 #include "../includes/connection.h"
 
+#include <syslog.h>
+
 #define ERROR -1 /*!< Retorno de funciones */
 
 
@@ -27,16 +29,18 @@ int tcp_listen(char *ip, int port, int backlog) {
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error al llamar a socket()");
+    return ERROR_SOCKET;
   }
 
   if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-    /* TODO */
+    syslog(LOG_ERR, "Error al llamar a bind()");
     return ERROR_BIND;
   }
 
   if (listen(sockfd, backlog) < 0) {
-    /*  TODO */
+    syslog(LOG_ERR, "Error al llamar a listen()");
+    return ERROR_LISTEN;
   }
 
   return sockfd;
