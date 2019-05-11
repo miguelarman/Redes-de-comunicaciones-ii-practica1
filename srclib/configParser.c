@@ -1,7 +1,13 @@
 /**
+<<<<<<< HEAD
  * @brief Parser del fichero de configuracion
  *
  * Parsea un fichero .conf y rellena una estructura configOptions
+=======
+ * @brief TODO Descripción del fichero/librería
+ *
+ * TODO Descripción más elaborada
+>>>>>>> e9607e34cb2230c577491f62e5de91dea86fbe46
  *
  * @file configParser.c
  * @author Miguel Arconada Manteca y Mario García Pascual

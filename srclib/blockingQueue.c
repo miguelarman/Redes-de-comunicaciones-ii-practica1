@@ -1,7 +1,13 @@
 /**
+<<<<<<< HEAD
  * @brief Contiene una implementacion de cola bloqueante
  *
  * Cotiene una implementacion de cola bloqueante
+=======
+ * @brief TODO Descripción del fichero/librería
+ *
+ * TODO Descripción más elaborada
+>>>>>>> e9607e34cb2230c577491f62e5de91dea86fbe46
  *
  * @file blockingQueue.c
  * @author Miguel Arconada Manteca y Mario García Pascual
@@ -15,6 +21,7 @@
 #include "../includes/blockingQueue.h"
 
 /**
+<<<<<<< HEAD
  * @brief Estructura de la cola bloqueante
  *
  * @ingroup BlockingQueue
@@ -29,6 +36,22 @@ struct _blockingQueue {
     pthread_mutex_t lock; /**< Mutex de la cola */
     sem_t filled; /**< Semaforo de slots llenos */
     sem_t empty; /**< Semaforo de slots vacios */
+=======
+ * @brief TODO Descripción de la estructura
+ *
+ * @ingroup BlockingQueue
+ * TODO Descripción de la estructura
+ */
+struct _blockingQueue {
+    int size; /**< TODO Descripción de campo de estructura */
+    int count; /**< TODO Descripción de campo de estructura */
+    int head; /**< TODO Descripción de campo de estructura */
+    int tail; /**< TODO Descripción de campo de estructura */
+    void **entries; /**< TODO Descripción de campo de estructura */
+    pthread_mutex_t lock; /**< TODO Descripción de campo de estructura */
+    sem_t filled; /**< TODO Descripción de campo de estructura */
+    sem_t empty; /**< TODO Descripción de campo de estructura */
+>>>>>>> e9607e34cb2230c577491f62e5de91dea86fbe46
 };
 
 int blockingQueue_create(blockingQueue **q_out, int size) {

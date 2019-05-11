@@ -3,12 +3,12 @@
  * @file server.h
  * @defgroup Server Servidor
  *
- * Descripción del grupo
+ * Contiene el programa principal del servidor.
  */
 
 #define SERVER_H /*!< Macro de compilación */
 
-#define QUEUE_SIZE 1024 /*!< Descripción de macro */
-#define THREAD_COUNT 20 /*!< Descripción de macro */
+#define QUEUE_SIZE 1024 /*!< Tamanio de la cola */
+#define THREAD_COUNT 20 /*!< Numero de threads */
 
 #endif

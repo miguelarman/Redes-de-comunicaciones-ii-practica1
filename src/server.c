@@ -2,8 +2,7 @@
  * @brief Este es el fichero que contiene la funcion que inicia el servidor.
  *
  * En este fichero esta la funcion principal del servidor, que lee el fichero
- * de configuracion, demoniza, crea threads que luego procesaran a los clientes
- * ...
+ * de configuracion, demoniza, crea threads que luego procesaran a los clientes.
  *
  * @file server.c
  * @author Miguel Arconada Manteca y Mario García Pascual
