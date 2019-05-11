@@ -7,14 +7,17 @@
 ########################################################
 CC = gcc
 CFLAGS = -g -Wall -ansi -pedantic
-FILES = tester_daemon test_server #server
+LOCALLIBDIR = /usr/local/lib
+LDFLAGS = -L$(LOCALLIBDIR)
+LDLIBS  = -lconfuse
+FILES = tester_daemon test_server server
 TESTERS = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
 OBJECTSTEST_SERVER = srclib/connection.o srclib/daemon.o srclib/procesa_peticion.o srclib/procesa_conexion.o srclib/picohttpparser.o testers/test_server.o
-OBJECTSSERVER = srclib/blockingQueue.o srclib/connection.o srclib/daemon.o srclib/procesa_conexion.o srclib/procesa_peticion.o srclib/configParser.o srclib/picohttpparser.o src/server.o
+OBJECTSSERVER = srclib/blockingQueue.o srclib/configParser.o srclib/connection.o srclib/daemon.o srclib/procesa_conexion.o srclib/procesa_peticion.o srclib/picohttpparser.o src/server.o
 ########################################################
-OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/blockingQueue.o srclib/connection.o srclib/picohttpparser.o srclib/procesa_peticion.o srclib/procesa_conexion.o #src/server.o
+OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/configParser.o srclib/blockingQueue.o srclib/connection.o srclib/picohttpparser.o srclib/procesa_peticion.o srclib/procesa_conexion.o src/server.o
 ########################################################
 
 all: $(FILES) clear
@@ -37,10 +40,10 @@ test_server.o: includes/connection.h includes/procesa_peticion.h includes/proces
 	$(CC) $(CFLAGS) -c testers/test_server.c
 
 server: $(OBJECTSSERVER)
-	$(CC) $(CFLAGS) -o server $(OBJECTSSERVER)
+	$(CC) $(CFLAGS) -pthread -o server $(OBJECTSSERVER) $(LDFLAGS) $(LDLIBS)
 
 server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h includes/picohttpparser.h src/server.c
-	$(CC) $(CFLAGS) -c src/server.c
+	$(CC) $(CFLAGS) -pthread -c src/server.c $(LDFLAGS) $(LDLIBS)
 
 
 
@@ -59,9 +62,6 @@ prueba.o: prueba.c
 daemon.o: srclib/daemon.c includes/daemon.h
 	$(CC) $(CFLAGS) -c srclib/daemon.c
 
-# confuse.o: srclib/confuse.c includes/confuse.h
-# 	$(CC) $(CFLAGS) -c srclib/confuse.c
-
 connection.o: srclib/connection.c includes/connection.h
 	$(CC) $(CFLAGS) -c srclib/connection.c
 
@@ -75,7 +75,10 @@ picohttpparser.o: srclib/picohttpparser.c includes/picohttpparser.h
 	$(CC) $(CFLAGS) -c srclib/picohttpparser.c
 
 blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
-	$(CC) $(CFLAGS) -c srclib/blockingQueue.c
+	$(CC) $(CFLAGS) -pthread -c srclib/blockingQueue.c $(LDFLAGS) $(LDLIBS)
+
+configParser.o: srclib/configParser.c includes/configParser.h
+	$(CC) $(CFLAGS) -pthread -c srclib/configParser.c $(LDFLAGS) $(LDLIBS)
 
 ########################################################
 doxy-file:

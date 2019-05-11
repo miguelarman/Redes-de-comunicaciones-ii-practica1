@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../includes/confuse.h"
+#include "confuse.h"
 #include "../includes/configParser.h"
 
 /*

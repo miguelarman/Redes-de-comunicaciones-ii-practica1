@@ -11,14 +11,12 @@
  * @date 9-5-2019
  */
 
+#include "../includes/procesa_conexion.h"
 #include "../includes/procesa_peticion.h"
 
 #include <syslog.h>
 
-#define OK 1    /*!< Retorno de funciones */
-#define ERROR 0 /*!< Retorno de funciones */
-#define TRUE 1  /*!< Valor booleano */
-#define FALSE 0 /*!< Valor booleano */
+
 
 /**
  * @brief Función que analiza si el cliente quiere conexión persistente
@@ -67,14 +65,14 @@ int procesa_conexion(int connfd, char *resources_path) {
       return OK;
     } else {
       syslog(LOG_ERR, "Error al llamar a parsear petición");
-      return ERROR_PARSEAR_CONEXION;
+      return ERROR_PARSEAR_PETICION;
     }
   }
 
   retorno = procesa_peticion(connfd, resources_path, campos_parseados);
   if (retorno != OK) {
       syslog(LOG_ERR, "Error al llamar a procesa_peticion");
-      return ERROR_PROCESA_CONEXION;
+      return ERROR_PROCESA_PETICION;
   }
 
   /* Si el cliente solicita conexion persistente en HTML 1.1 sigue ejecutando */
@@ -85,8 +83,8 @@ int procesa_conexion(int connfd, char *resources_path) {
       /* El cliente no quiere cerrar la conexión, así que se vuelve a recibir otra petición */
       retorno = parsear_peticion(connfd, &campos_parseados);
       if (retorno != OK) {
-            syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno");
-            return ERROR_PARSEAR_CONEXION;
+            syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno);
+            return ERROR_PARSEAR_PETICION;
       }
 
       if (retorno == CLOSE_CONNECTION_REQUEST) {
@@ -95,8 +93,8 @@ int procesa_conexion(int connfd, char *resources_path) {
 
       retorno = procesa_peticion(connfd, resources_path, campos_parseados);
       if (retorno != OK) {
-        syslog(LOG_ERR, "Error al llamar a procesa_peticion (%d)", retorno");
-        return ERROR_PROCESA_CONEXION;
+        syslog(LOG_ERR, "Error al llamar a procesa_peticion (%d)", retorno);
+        return ERROR_PROCESA_PETICION;
       }
     }
     return OK;

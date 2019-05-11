@@ -50,6 +50,8 @@ void sig_int(int signum) {
 /**
  * @brief Esta estructura se pasa por la cola para que los hilos la procesen.
  *
+ * @ingroup Server
+ *
  * Esta es la estructura que se pasa por la cola bloqueante
  * para que los hilos la procesen
  */
@@ -157,7 +159,7 @@ int main(int argc, char **argv)
   configOptions opts;
 
   /* Maneja la interrupcion para cerrar el servidor */
-  if (signal(SIG_INT, sig_int) == SIG_ERR) {
+  if (signal(SIGINT, sig_int) == SIG_ERR) {
     return ERROR;
   }
 

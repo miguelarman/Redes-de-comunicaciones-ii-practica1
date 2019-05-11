@@ -4,7 +4,7 @@
  * @defgroup Procesa_peticion Procesa petición
  *
  * Esta librería se encarga de procesar cada
- * petición recibida por el usuario, de forma
+ * petición recibida por el servidor, de forma
  * acorde a los ficheros que existan en la
  * ruta resources_path, con posibilidad de
  * detectar errores
@@ -38,6 +38,8 @@
 
 /**
  * @brief Petición parseador
+ *
+ * @ingroup Procesa_peticion
  *
  * Esta estructura contiene todos los argumentos
  * parseados de una petición HTTP: método (POST,

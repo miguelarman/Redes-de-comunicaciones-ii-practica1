@@ -8,7 +8,17 @@
  * analizar si se pide una conexión persistente, etc.
  */
 
+
 #define PROCESA_CONEXION_H /*!< Macro de compilación */
+
+
+#define TRUE                    1 /*!< Valor booleano */
+#define FALSE                   0 /*!< Valor booleano */
+#define OK                      0 /*!< Retorno de funciones */
+#define ERROR                  -1 /*!< Retorno de funciones */
+#define ERROR_PARSEAR_PETICION -2 /*!< Error al llamar a parsear_peticion() */
+#define ERROR_PROCESA_PETICION -3 /*!< Error al llamar a procesa_peticion() */
+
 
 /**
  * @brief Función que procesa una conexión
