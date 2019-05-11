@@ -1,7 +1,7 @@
 /**
- * @brief Descripción del fichero/librería
+ * @brief TODO Descripción del fichero/librería
  *
- * Descripción más elaborada
+ * TODO Descripción más elaborada
  *
  * @file blockingQueue.c
  * @author Miguel Arconada Manteca y Mario García Pascual
@@ -15,20 +15,20 @@
 #include "../includes/blockingQueue.h"
 
 /**
- * @brief Descripción de la estructura
+ * @brief TODO Descripción de la estructura
  *
  * @ingroup BlockingQueue
- * Descripción de la estructura
+ * TODO Descripción de la estructura
  */
 struct _blockingQueue {
-    int size; /**< Descripción de campo de estructura */
-    int count; /**< Descripción de campo de estructura */
-    int head; /**< Descripción de campo de estructura */
-    int tail; /**< Descripción de campo de estructura */
-    void **entries; /**< Descripción de campo de estructura */
-    pthread_mutex_t lock; /**< Descripción de campo de estructura */
-    sem_t filled; /**< Descripción de campo de estructura */
-    sem_t empty; /**< Descripción de campo de estructura */
+    int size; /**< TODO Descripción de campo de estructura */
+    int count; /**< TODO Descripción de campo de estructura */
+    int head; /**< TODO Descripción de campo de estructura */
+    int tail; /**< TODO Descripción de campo de estructura */
+    void **entries; /**< TODO Descripción de campo de estructura */
+    pthread_mutex_t lock; /**< TODO Descripción de campo de estructura */
+    sem_t filled; /**< TODO Descripción de campo de estructura */
+    sem_t empty; /**< TODO Descripción de campo de estructura */
 };
 
 int blockingQueue_create(blockingQueue **q_out, int size) {

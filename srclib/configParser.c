@@ -1,7 +1,7 @@
 /**
- * @brief Descripción del fichero/librería
+ * @brief TODO Descripción del fichero/librería
  *
- * Descripción más elaborada
+ * TODO Descripción más elaborada
  *
  * @file configParser.c
  * @author Miguel Arconada Manteca y Mario García Pascual

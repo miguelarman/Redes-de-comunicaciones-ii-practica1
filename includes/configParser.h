@@ -3,48 +3,48 @@
  * @file configParser.h
  * @defgroup ConfigParser Configuración de proyecto
  *
- * Descripción del grupo
+ * TODO Descripción del grupo
  */
 
 #define CONFIGPARSER_H /*!< Macro de compilación */
 
-#define DEFAULT_SERVER_ROOT "\\" /*!< Descripción de macro */
-#define DEFAULT_MAX_CLIENTS 20 /*!< Descripción de macro */
-#define DEFAULT_LISTEN_PORT 8080 /*!< Descripción de macro */
-#define DEFAULT_SERVER_SIGNATURE "Redes2" /*!< Descripción de macro */
-#define DEFAULT_THREAD_COUNT 20 /*!< Descripción de macro */
-#define DEFAULT_QUEUE_SIZE 20 /*!< Descripción de macro */
+#define DEFAULT_SERVER_ROOT "\\" /*!< TODO Descripción de macro */
+#define DEFAULT_MAX_CLIENTS 20 /*!< TODO Descripción de macro */
+#define DEFAULT_LISTEN_PORT 8080 /*!< TODO Descripción de macro */
+#define DEFAULT_SERVER_SIGNATURE "Redes2" /*!< TODO Descripción de macro */
+#define DEFAULT_THREAD_COUNT 20 /*!< TODO Descripción de macro */
+#define DEFAULT_QUEUE_SIZE 20 /*!< TODO Descripción de macro */
 
-#define MAX_STR 100 /*!< Descripción de macro */
+#define MAX_STR 100 /*!< TODO Descripción de macro */
 
-#define ERROR -1 /*!< Descripción de macro */
-#define SUCCESS 0 /*!< Descripción de macro */
+#define ERROR -1 /*!< TODO Descripción de macro */
+#define SUCCESS 0 /*!< TODO Descripción de macro */
 
 /**
- * @brief Descripción de la estructura
+ * @brief TODO Descripción de la estructura
  *
  * @ingroup ConfigParser
- * Descripción de la estructura
+ * TODO Descripción de la estructura
  */
 typedef struct
 {
-  char server_root[MAX_STR]; /**< Descripción de campo de estructura */
-  int max_clients; /**< Descripción de campo de estructura */
-  int listen_port; /**< Descripción de campo de estructura */
-  char server_signature[MAX_STR]; /**< Descripción de campo de estructura */
-  int thread_count; /**< Descripción de campo de estructura */
-  int queue_size; /**< Descripción de campo de estructura */
+  char server_root[MAX_STR]; /**< TODO Descripción de campo de estructura */
+  int max_clients; /**< TODO Descripción de campo de estructura */
+  int listen_port; /**< TODO Descripción de campo de estructura */
+  char server_signature[MAX_STR]; /**< TODO Descripción de campo de estructura */
+  int thread_count; /**< TODO Descripción de campo de estructura */
+  int queue_size; /**< TODO Descripción de campo de estructura */
 } configOptions;
 
 /**
- * @brief Descripción simple de la función
+ * @brief TODO Descripción simple de la función
  *
- * Descripción de la funcion
+ * TODO Descripción de la funcion
  *
  * @ingroup ConfigParser
- * @param cf Descripción del argumento
- * @param out_confopt Descripción del argumento
- * @return Descripción del retorno
+ * @param cf TODO Descripción del argumento
+ * @param out_confopt TODO Descripción del argumento
+ * @return TODO Descripción del retorno
  */
 int parseConfig(char *cf, configOptions *out_confopt);
 
