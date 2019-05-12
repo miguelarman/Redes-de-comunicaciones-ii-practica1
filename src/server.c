@@ -35,16 +35,37 @@ char abspath[MAX_STR]; /**< Ruta absoluta del servidor */
 /**
  * @brief Funcion encargada de manejar la interrupcion.
  *
- * Esta funcion se encarga de manejar la interrucion para apagar el servidor.
+ * Esta funcion se encarga de manejar la interrucion para
+ * apagar el servidor desde la terminal con un Ctrl+C
  *
  * @ingroup Server
  * @param signum El numero de la interrupcion.
  * @return nada
  */
 void sig_int(int signum) {
-  shutdown(listenfd, SHUT_RD);      /* cierra el socket del servidor */
+  syslog(LOG_INFO, "Recibida señal SIGINT");
+  shutdown(listenfd, SHUT_RD);
+  close_connection(listenfd);       /* cierra el socket del servidor */
   close_server = 1;
-  exit(1);
+  /* exit(1); */
+}
+
+/**
+ * @brief Funcion encargada de manejar la interrupcion.
+ *
+ * Esta funcion se encarga de manejar la interrucion para
+ * apagar el servidor desde la terminal con un kill
+ *
+ * @ingroup Server
+ * @param signum El numero de la interrupcion.
+ * @return nada
+ */
+void sig_term(int signum) {
+  syslog(LOG_INFO, "Recibida señal SIGTERM");
+  shutdown(listenfd, SHUT_RD);
+  close_connection(listenfd);       /* cierra el socket del servidor */
+  close_server = 1;
+  /* exit(1); */
 }
 
 /**
@@ -128,8 +149,10 @@ void *thread_main(void *arg) {
   while (1) {
     blockingQueue_get(queue, (void *)&c);
     if (c->poisoned == 1) {
+      syslog(LOG_INFO, "Terminando ejecución de hilo %ld", pthread_self());
       free(c);
-      pthread_exit(NULL);
+      /* pthread_exit(NULL); */
+      return NULL;
     }
     procesa_conexion(c->clifd, abspath);
     close(c->clifd);
@@ -161,6 +184,9 @@ int main(int argc, char **argv)
 
   /* Maneja la interrupcion para cerrar el servidor */
   if (signal(SIGINT, sig_int) == SIG_ERR) {
+    return ERROR;
+  }
+  if (signal(SIGTERM, sig_term) == SIG_ERR) {
     return ERROR;
   }
 
@@ -219,6 +245,7 @@ int main(int argc, char **argv)
     connfd = accept_connection(listenfd, (struct sockaddr*)&cliaddr, (socklen_t *)&clilen);
 
     if (close_server == 1) {
+      syslog(LOG_INFO, "Se va a terminar la ejecución");
       break;
     }
 
@@ -226,16 +253,25 @@ int main(int argc, char **argv)
     blockingQueue_put(queue, *c);
   }
 
+  syslog(LOG_INFO, "Creando paquetes envenenados para los threads");
+
   for (i = 0; i < THREAD_COUNT; i++) {
     client_create(c, 0, 1);
     blockingQueue_put(queue, *c);
   }
 
+  syslog(LOG_INFO, "Terminando los hilos...");
+
   for (i = 0; i < THREAD_COUNT; i++) {
     pthread_join(threads[i], NULL);
   }
 
+  syslog(LOG_INFO, "Finalizados los hilos con los joins");
+
   blockingQueue_destroy(queue);
+
+  syslog(LOG_INFO, "Eliminada la cola bloqueante");
+
   free(c);
   return SUCCESS;
 }

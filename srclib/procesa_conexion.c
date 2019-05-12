@@ -84,7 +84,7 @@ int procesa_conexion(int connfd, char *resources_path) {
       retorno = parsear_peticion(connfd, &campos_parseados);
       if (retorno == CLOSE_CONNECTION_REQUEST) {
         break;
-      } else {
+      } else if (retorno != OK) {
         syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno);
         return ERROR_PARSEAR_PETICION;
       }

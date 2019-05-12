@@ -14,8 +14,8 @@
  * @date 9-5-2019
  */
 
- #include "../includes/procesa_peticion.h"
-
+#include "../includes/procesa_peticion.h"
+#include <errno.h>
 
 
 
@@ -593,7 +593,11 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
     }
 
     if (campos_a_parsear->rret < 0) {
-      syslog(LOG_ERR, "Error en parsear_peticion. rret < 0");
+      if (errno == 104) {
+        syslog(LOG_ERR, "Error en parsear_peticion. Connection reset by peer");
+      } else {
+        syslog(LOG_ERR, "Error en el read() de parsear_peticion. (Errno: %d)", errno);
+      }
       return IOERROR;
     } else if (campos_a_parsear->rret == 0) {
       syslog(LOG_INFO, "Petición vacía");
