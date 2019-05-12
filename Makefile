@@ -7,10 +7,11 @@
 ########################################################
 CC = gcc
 CFLAGS = -g -Wall -ansi -pedantic -D_GNU_SOURCE
-LOCALLIBDIR = /usr/local/lib
+LOCALLIBDIR = lib#/usr/local/lib
 LDFLAGS = -L$(LOCALLIBDIR)
-LDLIBS  = -lconfuse
+LDLIBS  = -lconfuse -lblockingQueue -ldaemon -lpeticion -lconfigParser
 FILES = tester_daemon test_server server
+LIBRERIAS = lpeticion lconfigParser ldaemon lblockingQueue
 TESTERS = tester_daemon test_server
 ########################################################
 OBJECTSTESTER_DAEMON = srclib/daemon.o testers/tester_daemon.o
@@ -23,6 +24,8 @@ OBJECTS = srclib/daemon.o testers/tester_daemon.o srclib/configParser.o srclib/b
 all: $(FILES) clear
 
 testers: $(TESTERS) clear
+
+librerias: $(LIBRERIAS) clear
 
 
 
@@ -41,7 +44,7 @@ test_server.o: includes/connection.h includes/procesa_peticion.h includes/proces
 server: $(OBJECTSSERVER)
 	$(CC) $(CFLAGS) -pthread -o server $(OBJECTSSERVER) $(LDFLAGS) $(LDLIBS)
 
-server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h includes/picohttpparser.h src/server.c
+server.o: includes/configParser.h includes/blockingQueue.h includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h includes/picohttpparser.h src/server.c
 	$(CC) $(CFLAGS) -pthread -c src/server.c $(LDFLAGS) $(LDLIBS)
 
 
@@ -67,6 +70,21 @@ blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
 
 configParser.o: srclib/configParser.c includes/configParser.h
 	$(CC) $(CFLAGS) -pthread -c srclib/configParser.c $(LDFLAGS) $(LDLIBS)
+
+# Librerías
+lpeticion: procesa_peticion.o procesa_conexion.o picohttpparser.o
+	ar rcs lib/libpeticion.a procesa_peticion.o procesa_conexion.o picohttpparser.o
+
+ldaemon: daemon.o
+	ar rcs lib/libdaemon.a daemon.o
+
+lconfigParser: configParser.o
+	ar rcs lib/libconfigParser.a configParser.o
+
+lblockingQueue: blockingQueue.o
+	ar rcs lib/libblockingQueue.a blockingQueue.o
+
+
 
 ########################################################
 doxy-file:
