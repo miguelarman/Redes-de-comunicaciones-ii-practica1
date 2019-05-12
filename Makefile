@@ -6,7 +6,7 @@
 # Description: Makefile of the whole project. With options to compile and execute the programs
 ########################################################
 CC = gcc
-CFLAGS = -g -Wall -ansi -pedantic
+CFLAGS = -g -Wall -ansi -pedantic -D_GNU_SOURCE
 LOCALLIBDIR = /usr/local/lib
 LDFLAGS = -L$(LOCALLIBDIR)
 LDLIBS  = -lconfuse
@@ -24,20 +24,19 @@ all: $(FILES) clear
 
 testers: $(TESTERS) clear
 
-test_server_exe: test_server
-	valgrind --leak-check=full ./test_server
+
 
 tester_daemon: $(OBJECTSTESTER_DAEMON)
-	$(CC) $(CFLAGS) -o tester_daemon $(OBJECTSTESTER_DAEMON)
+	$(CC) $(CFLAGS) -o tester_daemon $(OBJECTSTESTER_DAEMON) $(LDFLAGS) $(LDLIBS)
 
 tester_daemon.o: includes/daemon.h testers/tester_daemon.c
-	$(CC) $(CFLAGS) -c testers/tester_daemon.c
+	$(CC) $(CFLAGS) -c testers/tester_daemon.c $(LDFLAGS) $(LDLIBS)
 
 test_server: $(OBJECTSTEST_SERVER)
-	$(CC) $(CFLAGS) -o test_server $(OBJECTSTEST_SERVER)
+	$(CC) $(CFLAGS) -o test_server $(OBJECTSTEST_SERVER) $(LDFLAGS) $(LDLIBS)
 
 test_server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_conexion.h includes/daemon.h testers/test_server.c
-	$(CC) $(CFLAGS) -c testers/test_server.c
+	$(CC) $(CFLAGS) -c testers/test_server.c $(LDFLAGS) $(LDLIBS)
 
 server: $(OBJECTSSERVER)
 	$(CC) $(CFLAGS) -pthread -o server $(OBJECTSSERVER) $(LDFLAGS) $(LDLIBS)
@@ -47,32 +46,21 @@ server.o: includes/connection.h includes/procesa_peticion.h includes/procesa_con
 
 
 
-prueba_script: prueba_script.o
-	$(CC) -g -o prueba_script prueba_script.o
-
-prueba_script.o: prueba_script.c
-	$(CC) -g -c prueba_script.c
-
-prueba: prueba.o
-	$(CC) -g -o prueba prueba.o
-
-prueba.o: prueba.c
-	$(CC) -g -c prueba.c
 
 daemon.o: srclib/daemon.c includes/daemon.h
-	$(CC) $(CFLAGS) -c srclib/daemon.c
+	$(CC) $(CFLAGS) -c srclib/daemon.c $(LDFLAGS) $(LDLIBS)
 
 connection.o: srclib/connection.c includes/connection.h
-	$(CC) $(CFLAGS) -c srclib/connection.c
+	$(CC) $(CFLAGS) -c srclib/connection.c $(LDFLAGS) $(LDLIBS)
 
 procesa_peticion.o: srclib/procesa_peticion.c includes/procesa_peticion.h includes/picohttpparser.h
-	$(CC) $(CFLAGS) -c srclib/procesa_peticion.c
+	$(CC) $(CFLAGS) -c srclib/procesa_peticion.c $(LDFLAGS) $(LDLIBS)
 
 procesa_conexion.o: srclib/procesa_conexion.c includes/procesa_conexion.h includes/procesa_peticion.h includes/picohttpparser.h
-	$(CC) $(CFLAGS) -c srclib/procesa_conexion.c
+	$(CC) $(CFLAGS) -c srclib/procesa_conexion.c $(LDFLAGS) $(LDLIBS)
 
 picohttpparser.o: srclib/picohttpparser.c includes/picohttpparser.h
-	$(CC) $(CFLAGS) -c srclib/picohttpparser.c
+	$(CC) $(CFLAGS) -c srclib/picohttpparser.c $(LDFLAGS) $(LDLIBS)
 
 blockingQueue.o: srclib/blockingQueue.c includes/blockingQueue.h
 	$(CC) $(CFLAGS) -pthread -c srclib/blockingQueue.c $(LDFLAGS) $(LDLIBS)
