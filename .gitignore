@@ -1,5 +1,3 @@
-resources/media/*
-resources/favicon.ico
 *.o
 test_server
 tester_daemon
@@ -10,3 +8,4 @@ xml/*
 api/*
 api-buena/*
 server
+resources/media/*
