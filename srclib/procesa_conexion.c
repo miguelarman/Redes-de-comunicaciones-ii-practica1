@@ -82,14 +82,13 @@ int procesa_conexion(int connfd, char *resources_path) {
     while (_cliente_quiere_cerrar_la_conexion(&campos_parseados) == FALSE) {
       /* El cliente no quiere cerrar la conexión, así que se vuelve a recibir otra petición */
       retorno = parsear_peticion(connfd, &campos_parseados);
-      if (retorno != OK) {
-            syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno);
-            return ERROR_PARSEAR_PETICION;
-      }
-
       if (retorno == CLOSE_CONNECTION_REQUEST) {
         break;
+      } else {
+        syslog(LOG_ERR, "Error al llamar a parsear_peticion (%d)", retorno);
+        return ERROR_PARSEAR_PETICION;
       }
+
 
       retorno = procesa_peticion(connfd, resources_path, campos_parseados);
       if (retorno != OK) {

@@ -470,11 +470,13 @@ int procesa_peticion (int connfd, char *resources_path, Parsear campos_parseados
   /* Comprobaciones de argumentos */
   if (resources_path == NULL) {
     syslog(LOG_INFO, "Resources_path incorrecta (no puede ser NULL)");
+    _responder_server_error(connfd, resources_path);
     return RESOURCES_PATH_NULL_ERROR;
   }
 
   if (connfd < 0) {
     syslog(LOG_INFO, "Descriptor del socket incorrecto");
+    _responder_server_error(connfd, resources_path);
     return DESCRIPTOR_CONN_INCORRECTO;
   }
 
@@ -591,8 +593,10 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
     }
 
     if (campos_a_parsear->rret < 0) {
+      syslog(LOG_ERR, "Error en parsear_peticion. rret < 0");
       return IOERROR;
     } else if (campos_a_parsear->rret == 0) {
+      syslog(LOG_INFO, "Petición vacía");
       return CLOSE_CONNECTION_REQUEST;
     }
 
@@ -617,12 +621,14 @@ int parsear_peticion(int connfd, Parsear *campos_a_parsear) {
     if (campos_a_parsear->pret > 0) {
       break; /* successfully parsed the request */
     } else if (campos_a_parsear->pret == -1) {
+      syslog(LOG_ERR, "Error en parsear_peticion. pret == 1");
       return PARSEERROR;
     }
 
     /* request is incomplete, continue the loop */
     assert(campos_a_parsear->pret == -2);
     if (campos_a_parsear->buflen == sizeof(campos_a_parsear->buf)) {
+      syslog(LOG_ERR, "Error en parsear_peticion. Request too long");
       return REQUESTISTOOLONGERROR;
     }
   }
