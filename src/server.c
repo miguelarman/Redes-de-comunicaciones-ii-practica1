@@ -151,8 +151,9 @@ int main(int argc, char **argv)
 {
   int i, connfd;
   int r;
-  socklen_t addrlen, clilen;
-  struct sockaddr *cliaddr;
+  socklen_t addrlen;
+  int clilen;
+  struct sockaddr_in cliaddr;
   blockingQueue *queue;
   pthread_t threads[THREAD_COUNT];
   client **c;
@@ -180,23 +181,42 @@ int main(int argc, char **argv)
     exit(EXIT_SUCCESS);
   }
 
+  syslog(LOG_INFO, "Se ha demonizado correctamente server.c");
+
 
   c = (client **)malloc(sizeof(client *));
 
   /* Contiene las llamadas a socket(), bind() y listen() */
   listenfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
+  if (listenfd == ERROR_SOCKET) {
+    syslog(LOG_ERR, "tcp_listen ha devuelto ERROR_SOCKET");
+    return ERROR;
+  } else if (listenfd == ERROR_BIND) {
+    syslog(LOG_ERR, "tcp_listen ha devuelto ERROR_BIND");
+    return ERROR;
+  } else if (listenfd == ERROR_LISTEN) {
+    syslog(LOG_ERR, "tcp_listen ha devuelto ERROR_LISTEN");
+    return ERROR;
+  }
+  syslog(LOG_INFO, "Escuchando en [%s:%d]...", SERVER_IP, SERVER_PORT);
 
   /* Crea la cola bloqueante */
   blockingQueue_create(&queue, QUEUE_SIZE);
+  syslog(LOG_INFO, "Creada la cola bloqueante");
+
   /* Crea los hilos */
   for (i = 0; i < THREAD_COUNT; i++) {
     pthread_create(&threads[i], NULL, thread_main, queue);
     /* falta control */
   }
+  syslog(LOG_INFO, "Creados los %d hilos", THREAD_COUNT);
+
+  addrlen = sizeof(cliaddr);
 
   while (1) {
     clilen = addrlen;
-    connfd = accept(listenfd, cliaddr, &clilen);
+    /* connfd = accept(listenfd, cliaddr, &clilen); */
+    connfd = accept_connection(listenfd, (struct sockaddr*)&cliaddr, (socklen_t *)&clilen);
 
     if (close_server == 1) {
       break;
