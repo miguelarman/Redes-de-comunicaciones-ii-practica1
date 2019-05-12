@@ -24,7 +24,6 @@
 #include "../includes/server.h"
 #include "../includes/configParser.h"
 
-#define SERVER_PORT 9999 /*!< Puerto del servidor */
 #define SERVER_IP "127.0.0.1" /*!< Direccion IP del servidor */
 
 
@@ -47,7 +46,6 @@ void sig_int(int signum) {
   shutdown(listenfd, SHUT_RD);
   close_connection(listenfd);       /* cierra el socket del servidor */
   close_server = 1;
-  /* exit(1); */
 }
 
 /**
@@ -65,7 +63,6 @@ void sig_term(int signum) {
   shutdown(listenfd, SHUT_RD);
   close_connection(listenfd);       /* cierra el socket del servidor */
   close_server = 1;
-  /* exit(1); */
 }
 
 /**
@@ -101,7 +98,6 @@ int client_create(client **c_out, int clifd, int poisoned)
   }
 
   c = (client *)malloc(sizeof(client));
-  /* falta control */
   c->clifd = clifd;
   c->poisoned = poisoned;
   *c_out = c;
@@ -151,7 +147,7 @@ void *thread_main(void *arg) {
     if (c->poisoned == 1) {
       syslog(LOG_INFO, "Terminando ejecución de hilo %ld", pthread_self());
       free(c);
-      /* pthread_exit(NULL); */
+      pthread_exit(NULL);
       return NULL;
     }
     procesa_conexion(c->clifd, abspath);
@@ -178,7 +174,7 @@ int main(int argc, char **argv)
   int clilen;
   struct sockaddr_in cliaddr;
   blockingQueue *queue;
-  pthread_t threads[THREAD_COUNT];
+  pthread_t *threads;
   client **c;
   configOptions opts;
 
@@ -213,7 +209,7 @@ int main(int argc, char **argv)
   c = (client **)malloc(sizeof(client *));
 
   /* Contiene las llamadas a socket(), bind() y listen() */
-  listenfd = tcp_listen(SERVER_IP, SERVER_PORT, 20);
+  listenfd = tcp_listen(SERVER_IP, opts.listen_port, opts.max_clients);
   if (listenfd == ERROR_SOCKET) {
     syslog(LOG_ERR, "tcp_listen ha devuelto ERROR_SOCKET");
     return ERROR;
@@ -224,18 +220,18 @@ int main(int argc, char **argv)
     syslog(LOG_ERR, "tcp_listen ha devuelto ERROR_LISTEN");
     return ERROR;
   }
-  syslog(LOG_INFO, "Escuchando en [%s:%d]...", SERVER_IP, SERVER_PORT);
+  syslog(LOG_INFO, "Escuchando en [%s:%d]...", SERVER_IP, opts.listen_port);
 
   /* Crea la cola bloqueante */
-  blockingQueue_create(&queue, QUEUE_SIZE);
+  blockingQueue_create(&queue, opts.queue_size);
   syslog(LOG_INFO, "Creada la cola bloqueante");
 
   /* Crea los hilos */
-  for (i = 0; i < THREAD_COUNT; i++) {
+  threads = (pthread_t *)malloc(sizeof(pthread_t) * opts.thread_count);
+  for (i = 0; i < opts.thread_count; i++) {
     pthread_create(&threads[i], NULL, thread_main, queue);
-    /* falta control */
   }
-  syslog(LOG_INFO, "Creados los %d hilos", THREAD_COUNT);
+  syslog(LOG_INFO, "Creados los %d hilos", opts.thread_count);
 
   addrlen = sizeof(cliaddr);
 
@@ -255,19 +251,20 @@ int main(int argc, char **argv)
 
   syslog(LOG_INFO, "Creando paquetes envenenados para los threads");
 
-  for (i = 0; i < THREAD_COUNT; i++) {
+  for (i = 0; i < opts.thread_count; i++) {
     client_create(c, 0, 1);
     blockingQueue_put(queue, *c);
   }
 
   syslog(LOG_INFO, "Terminando los hilos...");
 
-  for (i = 0; i < THREAD_COUNT; i++) {
+  for (i = 0; i < opts.thread_count; i++) {
     pthread_join(threads[i], NULL);
   }
 
   syslog(LOG_INFO, "Finalizados los hilos con los joins");
 
+  free(threads);
   blockingQueue_destroy(queue);
 
   syslog(LOG_INFO, "Eliminada la cola bloqueante");

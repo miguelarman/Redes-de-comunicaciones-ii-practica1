@@ -8,7 +8,4 @@
 
 #define SERVER_H /*!< Macro de compilación */
 
-#define QUEUE_SIZE 1024 /*!< Tamanio de la cola */
-#define THREAD_COUNT 20 /*!< Numero de threads */
-
 #endif
