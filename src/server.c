@@ -61,7 +61,9 @@ void sig_int(int signum) {
 void sig_term(int signum) {
   syslog(LOG_INFO, "Recibida señal SIGTERM");
   shutdown(listenfd, SHUT_RD);
-  close_connection(listenfd);       /* cierra el socket del servidor */
+  if (close_connection(listenfd) != 0) {       /* cierra el socket del servidor */
+    syslog(LOG_ERR, "Error en el close() (errno es %d)", errno);
+  }
   close_server = 1;
 }
 
