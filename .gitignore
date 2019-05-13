@@ -8,5 +8,5 @@ xml/*
 api/*
 api-buena/*
 server
-resources/media/*
+resources/media/
 confuse-3.2/*
