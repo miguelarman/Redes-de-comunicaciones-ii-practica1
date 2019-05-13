@@ -37,7 +37,7 @@
 
 
 /**
- * @brief Petición parseador
+ * @brief Estructura de la petición parseada
  *
  * @ingroup Procesa_peticion
  *
